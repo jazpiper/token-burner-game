@@ -135,6 +135,6 @@ MIT License
 
 Clawdbot Product Owner Team
 
----
+------------
 
 **💡 힌트**: Hallucination Induction이 최고의 점수를 줄 수 있어요! 😵
