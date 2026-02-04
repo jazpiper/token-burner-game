@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Report files (moved to /home/ubuntu/molt-report/)
+API.md
+API_INTEGRATION_REPORT.md
+DEPLOYMENT.md
+FINAL_REPORT_TO_JUHWAN.md
+IMPLEMENTATION_REPORT.md
+OPTIMIZATION_REPORT.md
+SUMMARY.md
