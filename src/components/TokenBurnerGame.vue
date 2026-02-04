@@ -156,10 +156,11 @@
 <script setup>
 import { ref, reactive, computed, onUnmounted } from 'vue'
 import { tokenBurner } from '../utils/tokenBurner.js'
+import { GAME_CONFIG } from '../constants/gameConfig.js'
 
 // Game state
 const gameStatus = ref('idle') // idle, playing, finished
-const timeLeft = ref(5)
+const timeLeft = ref(GAME_CONFIG.DEFAULT_TIME)
 const state = reactive({
   tokensBurned: 0,
   complexityWeight: 1,
@@ -171,36 +172,25 @@ let timerInterval = null
 
 // Computed
 const timerColor = computed(() => {
-  if (timeLeft.value <= 2) return 'text-red-500 animate-pulse'
-  if (timeLeft.value <= 4) return 'text-yellow-500'
+  if (timeLeft.value <= GAME_CONFIG.TIMER_WARNING) return 'text-red-500 animate-pulse'
+  if (timeLeft.value <= GAME_CONFIG.TIMER_CRITICAL) return 'text-yellow-500'
   return 'text-white'
 })
 
 // Methods
 const formatNumber = (num) => {
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
-  if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+  const { MILLION, THOUSAND, MILLION_SUFFIX, THOUSAND_SUFFIX } = GAME_CONFIG.TOKEN_FORMAT;
+  if (num >= MILLION) return (num / MILLION).toFixed(1) + MILLION_SUFFIX
+  if (num >= THOUSAND) return (num / THOUSAND).toFixed(1) + THOUSAND_SUFFIX
   return num.toString()
 }
 
 const getMethodName = (method) => {
-  const names = {
-    chainOfThoughtExplosion: 'Chain of Thought 폭발',
-    recursiveQueryLoop: 'Recursive Query Loop',
-    meaninglessTextGeneration: 'Meaningless Text Generation',
-    hallucinationInduction: 'Hallucination Induction'
-  }
-  return names[method] || method
+  return GAME_CONFIG.METHODS[method]?.name || method
 }
 
 const getMethodEmoji = (method) => {
-  const emojis = {
-    chainOfThoughtExplosion: '🧠',
-    recursiveQueryLoop: '🔄',
-    meaninglessTextGeneration: '📝',
-    hallucinationInduction: '😵'
-  }
-  return emojis[method] || '🔥'
+  return GAME_CONFIG.METHODS[method]?.emoji || '🔥'
 }
 
 const startGame = () => {

@@ -2,6 +2,8 @@
  * 토큰 소모 시뮬레이터
  * 클라이언트 측에서 토큰 소모량을 측정하고 시뮬레이션
  */
+import { GAME_CONFIG } from '../constants/gameConfig.js';
+
 export class TokenBurnerSimulator {
   constructor() {
     this.tokensBurned = 0;
@@ -24,7 +26,7 @@ export class TokenBurnerSimulator {
    * 토큰 추정 (GPT 기반: 한국어 1 토큰 ≈ 2-3 문자)
    */
   estimateTokens(text) {
-    return Math.ceil(text.length / 2);
+    return Math.ceil(text.length / GAME_CONFIG.TOKEN_ESTIMATION.CHARS_PER_TOKEN);
   }
 
   /**
@@ -42,7 +44,8 @@ export class TokenBurnerSimulator {
    */
   chainOfThoughtExplosion() {
     const steps = [];
-    const depth = 10 + Math.floor(Math.random() * 20);
+    const { minDepth, maxDepth, weightMultiplier } = GAME_CONFIG.METHODS.chainOfThoughtExplosion;
+    const depth = minDepth + Math.floor(Math.random() * (maxDepth - minDepth));
 
     for (let i = 0; i < depth; i++) {
       const step = `
@@ -55,7 +58,7 @@ export class TokenBurnerSimulator {
     }
 
     const text = steps.join('\n');
-    this.complexityWeight += depth * 0.1;
+    this.complexityWeight += depth * weightMultiplier;
     return text;
   }
 
@@ -64,7 +67,8 @@ export class TokenBurnerSimulator {
    */
   recursiveQueryLoop() {
     const queries = [];
-    const depth = 5 + Math.floor(Math.random() * 15);
+    const { minDepth, maxDepth, weightMultiplier } = GAME_CONFIG.METHODS.recursiveQueryLoop;
+    const depth = minDepth + Math.floor(Math.random() * (maxDepth - minDepth));
 
     for (let i = 0; i < depth; i++) {
       const query = `
@@ -77,7 +81,7 @@ export class TokenBurnerSimulator {
     }
 
     const text = queries.join('\n');
-    this.complexityWeight += depth * 0.15;
+    this.complexityWeight += depth * weightMultiplier;
     return text;
   }
 
@@ -86,15 +90,16 @@ export class TokenBurnerSimulator {
    */
   meaninglessTextGeneration() {
     const paragraphs = [];
+    const { minLength, maxLength, weightMultiplier } = GAME_CONFIG.METHODS.meaninglessTextGeneration;
     const count = 3 + Math.floor(Math.random() * 7);
 
     for (let i = 0; i < count; i++) {
-      const paragraph = this.generateMeaninglessText(200 + Math.floor(Math.random() * 300));
+      const paragraph = this.generateMeaninglessText(minLength + Math.floor(Math.random() * (maxLength - minLength)));
       paragraphs.push(paragraph);
     }
 
     const text = paragraphs.join('\n\n');
-    this.inefficiencyScore += count * 10;
+    this.inefficiencyScore += count * weightMultiplier * 100;
     return text;
   }
 
@@ -103,7 +108,8 @@ export class TokenBurnerSimulator {
    */
   hallucinationInduction() {
     const hallucinations = [];
-    const count = 2 + Math.floor(Math.random() * 5);
+    const { minDepth, maxDepth, weightMultiplier } = GAME_CONFIG.METHODS.hallucinationInduction;
+    const count = minDepth + Math.floor(Math.random() * (maxDepth - minDepth));
 
     for (let i = 0; i < count; i++) {
       const hallucination = `
@@ -117,8 +123,8 @@ export class TokenBurnerSimulator {
     }
 
     const text = hallucinations.join('\n\n');
-    this.complexityWeight += count * 0.5;
-    this.inefficiencyScore += count * 50;
+    this.complexityWeight += count * weightMultiplier;
+    this.inefficiencyScore += count * weightMultiplier * 100;
     return text;
   }
 
@@ -154,8 +160,10 @@ export class TokenBurnerSimulator {
    * 총 점수 계산
    */
   calculateScore() {
+    const { TOKENS, COMPLEXITY, INEFFICIENCY } = GAME_CONFIG.SCORE_WEIGHTS;
     return Math.floor(
-      (this.tokensBurned * this.complexityWeight) + this.inefficiencyScore
+      (this.tokensBurned * TOKENS * this.complexityWeight * COMPLEXITY) +
+      (this.inefficiencyScore * INEFFICIENCY)
     );
   }
 
