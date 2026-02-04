@@ -1,0 +1,46 @@
+{
+  "gameConfig": {
+    "DEFAULT_TIME": 5,
+    "TOKEN_ESTIMATION": {
+      "CHARS_PER_TOKEN": 2.5
+    },
+    "METHODS": {
+      "chainOfThoughtExplosion": {
+        "minDepth": 3,
+        "maxDepth": 10,
+        "weightMultiplier": 1.5
+      },
+      "recursiveQueryLoop": {
+        "minDepth": 2,
+        "maxDepth": 8,
+        "weightMultiplier": 1.8
+      },
+      "meaninglessTextGeneration": {
+        "minLength": 500,
+        "maxLength": 1500,
+        "weightMultiplier": 2.0
+      },
+      "hallucinationInduction": {
+        "minDepth": 3,
+        "maxDepth": 12,
+        "weightMultiplier": 2.5
+      }
+    },
+    "SCORE_WEIGHTS": {
+      "TOKENS": 1.0,
+      "COMPLEXITY": 0.5,
+      "INEFFICIENCY": 1.0
+    }
+  },
+  "api": {
+    "version": "2.0.0",
+    "corsOrigin": "*",
+    "jwtExpiry": "24h"
+  },
+  "rateLimit": {
+    "windowMs": 60000,
+    "maxRequests": 100,
+    "authMaxRequests": 10,
+    "actionMaxRequests": 50
+  }
+}

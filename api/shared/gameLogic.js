@@ -2,7 +2,41 @@
  * 토큰 낭비 대회 게임 로직 (공유 모듈)
  * 웹 UI와 API에서 공유하는 핵심 게임 로직
  */
-import { GAME_CONFIG } from '../../src/constants/gameConfig.js';
+
+// GAME_CONFIG - 내부 상수 정의
+const GAME_CONFIG = {
+  DEFAULT_TIME: 5,
+  TOKEN_ESTIMATION: {
+    CHARS_PER_TOKEN: 2.5 // 한국어 1 토큰 ≈ 2-3 문자
+  },
+  METHODS: {
+    chainOfThoughtExplosion: {
+      minDepth: 3,
+      maxDepth: 10,
+      weightMultiplier: 1.5
+    },
+    recursiveQueryLoop: {
+      minDepth: 2,
+      maxDepth: 8,
+      weightMultiplier: 1.8
+    },
+    meaninglessTextGeneration: {
+      minLength: 500,
+      maxLength: 1500,
+      weightMultiplier: 2.0
+    },
+    hallucinationInduction: {
+      minDepth: 3,
+      maxDepth: 12,
+      weightMultiplier: 2.5
+    }
+  },
+  SCORE_WEIGHTS: {
+    TOKENS: 1.0,
+    COMPLEXITY: 0.5,
+    INEFFICIENCY: 1.0
+  }
+};
 
 export class GameLogic {
   constructor() {
