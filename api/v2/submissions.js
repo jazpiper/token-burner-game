@@ -174,7 +174,7 @@ export async function getByIdHandler(req, res) {
   // CORS 헤더
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
 
   // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
@@ -188,11 +188,12 @@ export async function getByIdHandler(req, res) {
 
   try {
     // URL에서 submission ID 추출
-    const pathParts = req.url.split('/');
+    const pathname = req.url.split('?')[0];
+    const pathParts = pathname.split('/');
     const submissionId = pathParts[pathParts.length - 1];
 
-    // 제출 상세 조회
-    const submission = getSubmissionById(submissionId);
+    // 제출 상세 조회 (Async)
+    const submission = await getSubmissionById(submissionId);
 
     if (!submission) {
       return res.status(404).json({
@@ -233,7 +234,7 @@ export async function listHandler(req, res) {
 
   try {
     // Agent ID 추출
-    const agentId = req.headers['x-agent-id'] || req.query.agentId;
+    const agentId = req.headers['x-agent-id'] || req.query?.agentId;
 
     if (!agentId) {
       return res.status(400).json({
@@ -243,16 +244,17 @@ export async function listHandler(req, res) {
     }
 
     // Query parameters
-    const challengeId = req.query.challengeId;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;
+    const challengeId = urlParams.get('challengeId');
+    const page = parseInt(urlParams.get('page')) || 1;
+    const limit = parseInt(urlParams.get('limit')) || 20;
 
     // 필터 생성
     const filters = {};
     if (challengeId) filters.challengeId = challengeId;
 
-    // 에이전트 제출 기록 조회
-    const result = getAgentSubmissions(agentId, filters, page, limit);
+    // 에이전트 제출 기록 조회 (Async)
+    const result = await getAgentSubmissions(agentId, filters, page, limit);
 
     return res.json(result);
   } catch (error) {

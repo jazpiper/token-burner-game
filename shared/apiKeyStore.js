@@ -138,7 +138,7 @@ export function incrementRateLimit(identifier) {
 }
 
 // 초기화 실행
-initializeKeyStore();
+initializeKeyStore().catch(e => console.error('Early keystore init failed:', e));
 
 export default {
   generateApiKey,

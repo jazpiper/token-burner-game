@@ -1,7 +1,7 @@
 /**
  * GET /api/v2/health - 헬스체크
  */
-import db from '../services/db.js';
+import db from '../../services/db.js';
 
 /**
  * CORS 헤더 설정

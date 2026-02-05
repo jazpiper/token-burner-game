@@ -371,7 +371,7 @@ async function getChallengeTopScore(challengeId) {
 }
 
 // Initialize
-ensureInitialized();
+ensureInitialized().catch(e => console.error('Early challenge init failed:', e));
 
 export {
   getRandomChallenge,
