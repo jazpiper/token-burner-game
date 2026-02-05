@@ -4,7 +4,7 @@
 import {
   getLeaderboard,
   getAgentRank
-} from '../services/leaderboardService.js';
+} from '../../services/leaderboardService.js';
 
 /**
  * Rate Limiting (간단한 메모리 기반)

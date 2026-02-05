@@ -1,7 +1,7 @@
 /**
  * GET /api/v2/games/:id - 상태 조회
  */
-import { gameLogic } from '../shared/gameLogic.js';
+import { gameLogic } from '../../shared/gameLogic.js';
 
 // 메모리 저장소 (운영 환경에서는 Vercel KV 또는 Redis 사용 권장)
 const games = new Map();

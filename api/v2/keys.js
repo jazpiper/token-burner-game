@@ -9,7 +9,7 @@ import {
   storeApiKey,
   checkRateLimit,
   incrementRateLimit
-} from '../shared/apiKeyStore.js';
+} from '../../shared/apiKeyStore.js';
 
 /**
  * Vercel Serverless Function Handler

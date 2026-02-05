@@ -9,7 +9,7 @@ import {
   getRandomChallenge,
   getChallengeById,
   getAllChallenges
-} from '../services/challengeService.js';
+} from '../../services/challengeService.js';
 
 /**
  * GET /api/v2/challenges/random

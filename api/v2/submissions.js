@@ -9,14 +9,14 @@ import {
   createSubmission,
   getSubmissionById,
   getAgentSubmissions
-} from '../services/submissionService.js';
+} from '../../services/submissionService.js';
 import {
   validateSubmission,
   calculateScore
-} from '../services/validationService.js';
+} from '../../services/validationService.js';
 import {
   getChallengeById
-} from '../services/challengeService.js';
+} from '../../services/challengeService.js';
 
 /**
  * POST /api/v2/submissions
