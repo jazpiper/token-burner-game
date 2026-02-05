@@ -38,9 +38,11 @@ export default async function handler(req, res) {
   if (pathParts[2] === 'health') {
     return res.json({
       status: 'healthy',
+      database: 'not configured (using memory storage)',
       timestamp: new Date().toISOString(),
       activeGames: games.size,
-      totalScores: leaderboard.length
+      totalScores: leaderboard.length,
+      env: process.env.NODE_ENV || 'development'
     });
   }
 
