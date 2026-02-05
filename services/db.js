@@ -1,6 +1,9 @@
 import pg from 'pg';
 const { Pool } = pg;
 
+// Force SSL bypass for self-signed certificates
+process.env.PGSSLMODE = 'no-verify';
+
 // Use POSTGRES_URL environment variable
 const connectionString = process.env.POSTGRES_URL;
 
@@ -10,7 +13,10 @@ if (!connectionString) {
 
 const pool = new Pool({
     connectionString,
-    ssl: connectionString ? { rejectUnauthorized: false } : false
+    ssl: connectionString ? {
+        require: true,
+        rejectUnauthorized: false
+    } : false
 });
 
 /**
