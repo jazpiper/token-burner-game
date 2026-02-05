@@ -55,11 +55,9 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const { url } = req;
-  const method = req.method;
-
-  // 경로 파싱
-  const pathParts = url.split('/').filter(Boolean);
+  const { url, method } = req;
+  const pathname = url.split('?')[0];
+  const pathParts = pathname.split('/').filter(Boolean);
 
   // POST /api/v2/games/start - 게임 시작
   if (method === 'POST' && pathParts[2] === 'games' && pathParts[3] === 'start') {

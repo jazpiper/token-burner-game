@@ -16,7 +16,8 @@ import {
  */
 export default async function (req, res) {
   const { url } = req;
-  const pathParts = url.split('/').filter(Boolean);
+  const pathname = url.split('?')[0];
+  const pathParts = pathname.split('/').filter(Boolean);
 
   // Route: /api/v2/challenges/random
   if (pathParts[pathParts.length - 1] === 'random') {
@@ -24,7 +25,6 @@ export default async function (req, res) {
   }
 
   // Route: /api/v2/challenges/:id
-  // We check if the last part is a potential ID (not 'challenges')
   if (pathParts.length > 3 && pathParts[2] === 'challenges' && pathParts[3] !== 'random') {
     return getByIdHandler(req, res);
   }
@@ -34,7 +34,7 @@ export default async function (req, res) {
     return listHandler(req, res);
   }
 
-  return res.status(404).json({ error: 'Not Found', path: url });
+  return res.status(404).json({ error: 'Not Found', path: pathname || url });
 }
 
 export async function handler(req, res) {

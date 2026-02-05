@@ -32,7 +32,8 @@ export default async function handler(req, res) {
   }
 
   // 경로 파싱
-  const pathParts = req.url.split('/').filter(Boolean);
+  const pathname = req.url.split('?')[0];
+  const pathParts = pathname.split('/').filter(Boolean);
 
   // GET /api/v2/health
   if (pathParts[2] === 'health') {

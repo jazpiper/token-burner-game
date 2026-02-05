@@ -23,7 +23,8 @@ import {
  */
 export default async function (req, res) {
   const { url, method } = req;
-  const pathParts = url.split('/').filter(Boolean);
+  const pathname = url.split('?')[0];
+  const pathParts = pathname.split('/').filter(Boolean);
 
   // Route: POST /api/v2/submissions
   if (method === 'POST' && pathParts.length === 3 && pathParts[2] === 'submissions') {
@@ -40,7 +41,7 @@ export default async function (req, res) {
     return listHandler(req, res);
   }
 
-  return res.status(404).json({ error: 'Not Found', path: url });
+  return res.status(404).json({ error: 'Not Found', path: pathname || url });
 }
 
 export async function handler(req, res) {
