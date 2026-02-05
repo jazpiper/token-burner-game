@@ -35,17 +35,14 @@ export default async function handler(req, res) {
   const pathname = url.split('?')[0];
   const pathParts = pathname.split('/').filter(Boolean);
 
-  // Route: POST /api/v2/submissions
   if (method === 'POST' && pathParts.length === 3 && pathParts[2] === 'submissions') {
     return submitHandler(req, res);
   }
 
-  // Route: GET /api/v2/submissions/:id
   if (method === 'GET' && pathParts.length === 4 && pathParts[2] === 'submissions') {
     return getByIdHandler(req, res);
   }
 
-  // Route: GET /api/v2/submissions
   if (method === 'GET' && pathParts.length === 3 && pathParts[2] === 'submissions') {
     return listHandler(req, res);
   }
@@ -54,22 +51,18 @@ export default async function handler(req, res) {
 }
 
 export async function submitHandler(req, res) {
-  // CORS 헤더
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
 
-  // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // POST만 허용
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // JWT 토큰 검증
   const authHeader = req.headers['authorization'];
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Unauthorized', message: 'Authorization header required' });
@@ -83,10 +76,8 @@ export async function submitHandler(req, res) {
 
   const agentId = decoded.agentId;
 
-  // 요청 본문 파싱
   const { challengeId, tokensUsed, answer, responseTime } = req.body || {};
 
-  // 필수 필드 검증
   if (!challengeId || !tokensUsed || !answer) {
     return res.status(400).json({
       error: 'Bad Request',
@@ -99,7 +90,6 @@ export async function submitHandler(req, res) {
     });
   }
 
-  // 타입 검증
   if (typeof tokensUsed !== 'number' || tokensUsed < 0) {
     return res.status(400).json({
       error: 'Bad Request',
@@ -107,14 +97,13 @@ export async function submitHandler(req, res) {
     });
   }
 
-  if (typeof answer !== 'string' || answer.length === 0) {
+  if (typeof answer !== 'string' || answer.length === 0 || answer.length > 100000) {
     return res.status(400).json({
       error: 'Bad Request',
-      message: 'answer must be a non-empty string'
+      message: 'answer must be between 1 and 100000 characters'
     });
   }
 
-  // 챌린지 존재 확인
   const challenge = await getChallengeById(challengeId);
   if (!challenge) {
     return res.status(404).json({
@@ -123,7 +112,6 @@ export async function submitHandler(req, res) {
     });
   }
 
-  // 토큰 검증
   const validation = await validateSubmission(
     { agentId, challengeId, tokensUsed, answer, responseTime },
     challenge
@@ -140,13 +128,11 @@ export async function submitHandler(req, res) {
     });
   }
 
-  // 점수 계산
   const scoreResult = calculateScore(
     { tokensUsed, answer },
     challenge
   );
 
-  // 제출 생성
   const submission = await createSubmission({
     agentId,
     challengeId,
@@ -177,28 +163,19 @@ export async function submitHandler(req, res) {
  * Get submission details by ID
  */
 export async function getByIdHandler(req, res) {
-  // CORS 헤더
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
 
-  // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // GET만 허용
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // URL에서 submission ID 추출
-    const pathname = req.url.split('?')[0];
-    const pathParts = pathname.split('/');
-    const submissionId = pathParts[pathParts.length - 1];
-
-    // JWT 토큰 검증
     const authHeader = req.headers['authorization'];
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Unauthorized', message: 'Authorization header required' });
@@ -210,7 +187,10 @@ export async function getByIdHandler(req, res) {
       return res.status(401).json({ error: 'Unauthorized', message: 'Invalid token' });
     }
 
-    // 제출 상세 조회
+    const pathname = req.url.split('?')[0];
+    const pathParts = pathname.split('/');
+    const submissionId = pathParts[pathParts.length - 1];
+
     const submission = await getSubmissionById(submissionId);
 
     if (!submission) {
@@ -220,7 +200,6 @@ export async function getByIdHandler(req, res) {
       });
     }
 
-    // Agent ID 검증 - 토큰의 agentId와 데이터의 agentId 비교
     if (decoded.agentId !== submission.agentId) {
       return res.status(403).json({ error: 'Forbidden', message: 'Access denied' });
     }
@@ -240,23 +219,19 @@ export async function getByIdHandler(req, res) {
  * List agent submissions
  */
 export async function listHandler(req, res) {
-  // CORS 헤더
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
 
-  // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // GET만 허용
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // JWT 토큰 검증
     const authHeader = req.headers['authorization'];
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Unauthorized', message: 'Authorization header required' });
@@ -270,17 +245,14 @@ export async function listHandler(req, res) {
 
     const agentId = decoded.agentId;
 
-    // Query parameters
     const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;
     const challengeId = urlParams.get('challengeId');
     const page = parseInt(urlParams.get('page')) || 1;
     const limit = parseInt(urlParams.get('limit')) || 20;
 
-    // 필터 생성
     const filters = {};
     if (challengeId) filters.challengeId = challengeId;
 
-    // 에이전트 목록 조회
     const result = await getAgentSubmissions(agentId, filters, page, limit);
 
     return res.json(result);
