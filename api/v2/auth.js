@@ -85,7 +85,7 @@ export default async function handler(req, res) {
 
   // API Key 검증 (Shared Store 사용)
   if (!await validateApiKey(apiKey)) {
-    return res.status(401).json({ error: 'Invalid API key' });
+    return res.status(401).json({ error: 'Invalid API key', received: apiKey });
   }
 
   // 정보 조회

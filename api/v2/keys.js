@@ -74,7 +74,15 @@ export default async function handler(req, res) {
   const apiKey = generateApiKey();
 
   // API Key 저장
-  await storeApiKey(apiKey, finalAgentId, ip);
+  try {
+    await storeApiKey(apiKey, finalAgentId, ip);
+  } catch (dbError) {
+    return res.status(500).json({
+      error: 'Database Error',
+      message: dbError.message,
+      hint: 'Check if api_keys table exists and matches schema'
+    });
+  }
 
   // Rate Limiting 카운터 증가
   incrementRateLimit(rateLimitKey);

@@ -149,8 +149,10 @@ export async function storeApiKey(apiKey, agentId, ip) {
       'INSERT INTO api_keys (api_key, agent_id, ip) VALUES ($1, $2, $3) ON CONFLICT (api_key) DO NOTHING',
       [apiKey, agentId, ip]
     );
+    console.log(`Successfully saved API key ${apiKey} to database.`);
   } catch (e) {
     console.error('Failed to save API key to DB:', e.message);
+    throw new Error(`Database insertion failed: ${e.message}`);
   }
 }
 
