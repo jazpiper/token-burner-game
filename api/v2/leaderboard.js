@@ -1,12 +1,14 @@
 /**
  * GET /api/v2/leaderboard - 리더보드
  */
-
-// 메모리 저장소 (운영 환경에서는 Vercel KV 또는 Redis 사용 권장)
-const leaderboard = [];
+import {
+  getLeaderboard,
+  getAgentRank
+} from '../services/leaderboardService.js';
 
 /**
  * Rate Limiting (간단한 메모리 기반)
+ * 운영 환경에서는 Vercel KV 또는 Redis 사용 권장
  */
 const rateLimitMap = new Map();
 
@@ -56,26 +58,81 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // 경로 파싱
-  const pathParts = req.url.split('/').filter(Boolean);
+  try {
+    // 경로 파싱
+    const pathParts = req.url.split('/').filter(Boolean);
 
-  // GET /api/v2/leaderboard
-  if (pathParts[2] === 'leaderboard') {
-    // Rate Limiting 체크
-    const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
-    if (!checkRateLimit(`leaderboard:${ip}`, 100, 60 * 1000)) {
-      return res.status(429).json({
-        error: 'Too many requests, please try again later'
+    // GET /api/v2/leaderboard
+    if (pathParts[2] === 'leaderboard') {
+      // Rate Limiting 체크
+      const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+      if (!checkRateLimit(`leaderboard:${ip}`, 100, 60 * 1000)) {
+        return res.status(429).json({
+          error: 'Too many requests, please try again later'
+        });
+      }
+
+      // Query parameters
+      const type = req.query.type;
+      const difficulty = req.query.difficulty;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 100;
+
+      // 필터 생성
+      const filters = {};
+      if (type) filters.type = type;
+      if (difficulty) filters.difficulty = difficulty;
+
+      // 리더보드 조회
+      const leaderboardData = getLeaderboard(filters);
+
+      // 페이징
+      const total = leaderboardData.length;
+      const offset = (page - 1) * limit;
+      const paginated = leaderboardData.slice(offset, offset + limit);
+
+      return res.json({
+        leaderboard: paginated,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
       });
     }
 
-    // 점수 기준 내림차순 정렬 (상위 100개)
-    const sortedLeaderboard = leaderboard
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 100);
+    // GET /api/v2/leaderboard/rank/:agentId
+    if (pathParts[3] === 'rank' && pathParts[4]) {
+      const agentId = pathParts[4];
 
-    return res.json(sortedLeaderboard);
+      // Rate Limiting 체크
+      const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+      if (!checkRateLimit(`rank:${ip}`, 100, 60 * 1000)) {
+        return res.status(429).json({
+          error: 'Too many requests, please try again later'
+        });
+      }
+
+      // Query parameters
+      const type = req.query.type;
+      const difficulty = req.query.difficulty;
+
+      // 필터 생성
+      const filters = {};
+      if (type) filters.type = type;
+      if (difficulty) filters.difficulty = difficulty;
+
+      // 에이전트 순위 조회
+      const rankData = getAgentRank(agentId, filters);
+
+      return res.json(rankData);
+    }
+
+    return res.status(404).json({ error: 'Not found', path: req.url });
+  } catch (error) {
+    console.error('Leaderboard error:', error);
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to get leaderboard'
+    });
   }
-
-  return res.status(404).json({ error: 'Not found', path: req.url });
 }
