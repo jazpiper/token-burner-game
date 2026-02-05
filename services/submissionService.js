@@ -4,104 +4,100 @@
 import { updateChallengeStats, getChallengeById } from './challengeService.js';
 import db from './db.js';
 
-// In-memory storage (cache - limited)
-const submissions = new Map();
-
 // Generate submission ID
 function generateSubmissionId() {
   return `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// Create new submission
 async function createSubmission(data) {
-  const submission = {
-    submissionId: generateSubmissionId(),
-    agentId: data.agentId,
-    challengeId: data.challengeId,
-    tokensUsed: data.tokensUsed,
-    answer: data.answer,
-    responseTime: data.responseTime,
-    score: data.score,
-    validation: data.validation,
-    validatedAt: Date.now(),
-    createdAt: Date.now()
-  };
+  const submissionId = generateSubmissionId();
+  const client = await db.getClient();
 
-  // Add to cache
-  submissions.set(submission.submissionId, submission);
-
-  // Persistence to DB
   try {
-    await db.query(
+    await client.query('BEGIN');
+
+    await client.query(
       `INSERT INTO submissions 
       (submission_id, agent_id, challenge_id, tokens_used, answer, response_time, score, validation_errors, validation_warnings, validated_at) 
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
-        submission.submissionId,
-        submission.agentId,
-        submission.challengeId,
-        submission.tokensUsed,
-        submission.answer,
-        submission.responseTime,
-        submission.score,
-        JSON.stringify(submission.validation.errors || []),
-        JSON.stringify(submission.validation.warnings || []),
-        new Date(submission.validatedAt)
+        submissionId,
+        data.agentId,
+        data.challengeId,
+        data.tokensUsed,
+        data.answer,
+        data.responseTime,
+        data.score,
+        JSON.stringify(data.validation.errors || []),
+        JSON.stringify(data.validation.warnings || []),
+        new Date()
       ]
     );
-    console.log(`Submission ${submission.submissionId} saved to database.`);
+
+    await client.query(
+      'UPDATE challenges SET times_completed = times_completed + 1, avg_tokens_per_attempt = (avg_tokens_per_attempt * times_completed + $1) / (times_completed + 1), updated_at = CURRENT_TIMESTAMP WHERE challenge_id = $2',
+      [data.tokensUsed, data.challengeId]
+    );
+
+    await client.query('COMMIT');
+
+    return {
+      submissionId,
+      agentId: data.agentId,
+      challengeId: data.challengeId,
+      tokensUsed: data.tokensUsed,
+      answer: data.answer,
+      responseTime: data.responseTime,
+      score: data.score,
+      validation: data.validation,
+      validatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    };
   } catch (e) {
-    console.error('Failed to save submission to DB:', e.message);
+    await client.query('ROLLBACK');
+    console.error('Failed to create submission:', e.message);
+    throw e;
+  } finally {
+    client.release();
   }
-
-  // Update challenge stats
-  await updateChallengeStats(data.challengeId, data.tokensUsed, data.score);
-
-  return { ...submission };
 }
 
-// Get submission by ID
 async function getSubmissionById(submissionId) {
-  // Check cache first
-  let submission = submissions.get(submissionId);
+  try {
+    const res = await db.query('SELECT * FROM submissions WHERE submission_id = $1', [submissionId]);
 
-  if (!submission) {
-    try {
-      const res = await db.query('SELECT * FROM submissions WHERE submission_id = $1', [submissionId]);
-      if (res.rows.length > 0) {
-        const row = res.rows[0];
-        submission = {
-          submissionId: row.submission_id,
-          agentId: row.agent_id,
-          challengeId: row.challenge_id,
-          tokensUsed: row.tokens_used,
-          answer: row.answer,
-          responseTime: row.response_time,
-          score: row.score,
-          validation: {
-            errors: row.validation_errors,
-            warnings: row.validation_warnings
-          },
-          validatedAt: row.validated_at,
-          createdAt: row.created_at
-        };
-        submissions.set(submissionId, submission);
-      }
-    } catch (e) {
-      console.error('Failed to fetch submission from DB:', e.message);
+    if (res.rows.length === 0) {
+      return null;
     }
+
+    const row = res.rows[0];
+    const submission = {
+      submissionId: row.submission_id,
+      agentId: row.agent_id,
+      challengeId: row.challenge_id,
+      tokensUsed: row.tokens_used,
+      answer: row.answer,
+      responseTime: row.response_time,
+      score: row.score,
+      validation: {
+        errors: row.validation_errors,
+        warnings: row.validation_warnings
+      },
+      validatedAt: row.validated_at,
+      createdAt: row.created_at
+    };
+
+    const challenge = await getChallengeById(submission.challengeId);
+
+    return {
+      ...submission,
+      challengeTitle: challenge?.title,
+      challengeDifficulty: challenge?.difficulty
+    };
+  } catch (e) {
+    console.error('Failed to fetch submission from DB:', e.message);
+    throw e;
   }
-
-  if (!submission) return null;
-
-  // Get challenge details
-  const challenge = await getChallengeById(submission.challengeId);
-
-  return {
-    ...submission,
-    challengeTitle: challenge?.title,
-    challengeDifficulty: challenge?.difficulty
-  };
 }
 
 // Get agent's submissions
@@ -180,7 +176,7 @@ async function getAllSubmissions() {
     }));
   } catch (e) {
     console.error('Failed to fetch all submissions from DB:', e.message);
-    return Array.from(submissions.values());
+    return [];
   }
 }
 

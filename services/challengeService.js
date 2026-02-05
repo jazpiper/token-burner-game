@@ -3,9 +3,7 @@
 
 import db from './db.js';
 
-// Initial challenges data
 const INITIAL_CHALLENGES = [
-  // Chain of Thought Explosion
   {
     challengeId: "cot_easy_001",
     title: "고양이 진화론",
@@ -83,8 +81,6 @@ const INITIAL_CHALLENGES = [
     avgTokensPerAttempt: 0,
     createdAt: "2026-02-05T00:00:00Z"
   },
-
-  // Recursive Query Loop
   {
     challengeId: "rql_easy_001",
     title: "자기 존재 의미 10단계",
@@ -129,8 +125,6 @@ const INITIAL_CHALLENGES = [
     avgTokensPerAttempt: 0,
     createdAt: "2026-02-05T00:00:00Z"
   },
-
-  // Meaningless Text Generation
   {
     challengeId: "mtg_easy_001",
     title: "100개의 무의미한 문장",
@@ -175,8 +169,6 @@ const INITIAL_CHALLENGES = [
     avgTokensPerAttempt: 0,
     createdAt: "2026-02-05T00:00:00Z"
   },
-
-  // Hallucination Induction
   {
     challengeId: "hi_easy_001",
     title: "존재하지 않는 역사 10가지",
@@ -223,109 +215,138 @@ const INITIAL_CHALLENGES = [
   }
 ];
 
-// In-memory storage (cache)
-let challenges = new Map();
-let challengeTopScores = new Map();
-let isInitialized = false;
-let initPromise = null;
+async function seedInitialChallenges() {
+  const res = await db.query('SELECT COUNT(*) FROM challenges');
+  const count = parseInt(res.rows[0].count);
 
-/**
- * Ensure challenges are initialized
- */
-async function ensureInitialized() {
-  if (isInitialized) return;
-  if (initPromise) return initPromise;
-
-  initPromise = (async () => {
-    try {
-      const res = await db.query('SELECT * FROM challenges');
-      if (res.rows.length > 0) {
-        res.rows.forEach(row => {
-          const challenge = {
-            challengeId: row.challenge_id,
-            title: row.title,
-            description: row.description,
-            type: row.type,
-            difficulty: row.difficulty,
-            expectedTokens: {
-              min: row.expected_tokens_min,
-              max: row.expected_tokens_max
-            },
-            timesCompleted: row.times_completed,
-            avgTokensPerAttempt: row.avg_tokens_per_attempt,
-            createdAt: row.created_at
-          };
-          challenges.set(challenge.challengeId, challenge);
-        });
-      } else {
-        // Seed initial challenges
-        for (const c of INITIAL_CHALLENGES) {
-          await db.query(
-            'INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING',
-            [c.challengeId, c.title, c.description, c.type, c.difficulty, c.expectedTokens.min, c.expectedTokens.max]
-          );
-          challenges.set(c.challengeId, { ...c });
-        }
-      }
-      isInitialized = true;
-    } catch (e) {
-      console.error('Failed to load challenges from DB, using defaults:', e.message);
-      INITIAL_CHALLENGES.forEach(c => challenges.set(c.challengeId, { ...c }));
-      isInitialized = true;
-    } finally {
-      initPromise = null;
+  if (count === 0) {
+    for (const c of INITIAL_CHALLENGES) {
+      await db.query(
+        'INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (challenge_id) DO NOTHING',
+        [c.challengeId, c.title, c.description, c.type, c.difficulty, c.expectedTokens.min, c.expectedTokens.max]
+      );
     }
-  })();
-
-  return initPromise;
+    console.log(`Seeded ${INITIAL_CHALLENGES.length} initial challenges.`);
+  }
 }
 
-// Get random challenge
 async function getRandomChallenge(filters = {}) {
-  await ensureInitialized();
-  const allChallenges = Array.from(challenges.values());
-  let filteredChallenges = allChallenges;
+  let queryText = 'SELECT * FROM challenges';
+  let whereClauses = [];
+  let params = [];
+  let paramIndex = 1;
 
   if (filters.difficulty) {
-    filteredChallenges = filteredChallenges.filter(c => c.difficulty === filters.difficulty);
+    whereClauses.push(`difficulty = $${paramIndex++}`);
+    params.push(filters.difficulty);
   }
   if (filters.type) {
-    filteredChallenges = filteredChallenges.filter(c => c.type === filters.type);
+    whereClauses.push(`type = $${paramIndex++}`);
+    params.push(filters.type);
   }
 
-  if (filteredChallenges.length === 0) {
+  if (whereClauses.length > 0) {
+    queryText += ' WHERE ' + whereClauses.join(' AND ');
+  }
+
+  const res = await db.query(queryText, params);
+
+  if (res.rows.length === 0) {
     return null;
   }
 
-  const randomIndex = Math.floor(Math.random() * filteredChallenges.length);
-  return { ...filteredChallenges[randomIndex] };
+  const randomIndex = Math.floor(Math.random() * res.rows.length);
+  const row = res.rows[randomIndex];
+  return {
+    challengeId: row.challenge_id,
+    title: row.title,
+    description: row.description,
+    type: row.type,
+    difficulty: row.difficulty,
+    expectedTokens: {
+      min: row.expected_tokens_min,
+      max: row.expected_tokens_max
+    },
+    timesCompleted: row.times_completed,
+    avgTokensPerAttempt: row.avg_tokens_per_attempt,
+    createdAt: row.created_at
+  };
 }
 
-// Get challenge by ID
 async function getChallengeById(challengeId) {
-  await ensureInitialized();
-  const challenge = challenges.get(challengeId);
-  return challenge ? { ...challenge } : null;
+  const res = await db.query('SELECT * FROM challenges WHERE challenge_id = $1', [challengeId]);
+
+  if (res.rows.length === 0) {
+    return null;
+  }
+
+  const row = res.rows[0];
+  return {
+    challengeId: row.challenge_id,
+    title: row.title,
+    description: row.description,
+    type: row.type,
+    difficulty: row.difficulty,
+    expectedTokens: {
+      min: row.expected_tokens_min,
+      max: row.expected_tokens_max
+    },
+    timesCompleted: row.times_completed,
+    avgTokensPerAttempt: row.avg_tokens_per_attempt,
+    createdAt: row.created_at
+  };
 }
 
-// Get all challenges
 async function getAllChallenges(filters = {}, page = 1, limit = 20) {
-  await ensureInitialized();
-  let result = Array.from(challenges.values());
+  let queryText = 'SELECT * FROM challenges';
+  let whereClauses = [];
+  let params = [];
+  let paramIndex = 1;
 
   if (filters.difficulty) {
-    result = result.filter(c => c.difficulty === filters.difficulty);
+    whereClauses.push(`difficulty = $${paramIndex++}`);
+    params.push(filters.difficulty);
   }
   if (filters.type) {
-    result = result.filter(c => c.type === filters.type);
+    whereClauses.push(`type = $${paramIndex++}`);
+    params.push(filters.type);
   }
 
-  const total = result.length;
-  const offset = (page - 1) * limit;
-  const paginated = result.slice(offset, offset + limit);
+  if (whereClauses.length > 0) {
+    queryText += ' WHERE ' + whereClauses.join(' AND ');
+  }
+
+  queryText += ' ORDER BY created_at DESC';
+
+  const countRes = await db.query(
+    queryText.replace('SELECT *', 'SELECT COUNT(*)'),
+    params
+  );
+  const total = parseInt(countRes.rows[0].count);
+
+  queryText += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+  params.push(limit);
+  params.push((page - 1) * limit);
+
+  const res = await db.query(queryText, params);
+
+  const mappedChallenges = res.rows.map(row => ({
+    challengeId: row.challenge_id,
+    title: row.title,
+    description: row.description,
+    type: row.type,
+    difficulty: row.difficulty,
+    expectedTokens: {
+      min: row.expected_tokens_min,
+      max: row.expected_tokens_max
+    },
+    timesCompleted: row.times_completed,
+    avgTokensPerAttempt: row.avg_tokens_per_attempt,
+    createdAt: row.created_at
+  }));
 
   return {
-    challenges: paginated,
+    challenges: mappedChallenges,
     total,
     page,
     limit,
@@ -335,21 +356,37 @@ async function getAllChallenges(filters = {}, page = 1, limit = 20) {
 
 // Update challenge stats after submission
 async function updateChallengeStats(challengeId, tokensUsed, score) {
-  await ensureInitialized();
-  const challenge = challenges.get(challengeId);
-  if (!challenge) return;
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
 
-  challenge.timesCompleted++;
-  challenge.avgTokensPerAttempt = (
-    (challenge.avgTokensPerAttempt * (challenge.timesCompleted - 1) + tokensUsed)
-    / challenge.timesCompleted
-  );
+    const res = await client.query(
+      'SELECT times_completed, avg_tokens_per_attempt FROM challenges WHERE challenge_id = $1 FOR UPDATE',
+      [challengeId]
+    );
 
-  // Update top score
-  const currentTop = challengeTopScores.get(challengeId) || 0;
-  if (score > currentTop) {
-    challengeTopScores.set(challengeId, score);
+    if (res.rows.length === 0) return;
+
+    const currentStats = res.rows[0];
+    const timesCompleted = currentStats.times_completed + 1;
+    const avgTokensPerAttempt = Math.floor(
+      (currentStats.avg_tokens_per_attempt * currentStats.times_completed + tokensUsed) / timesCompleted
+    );
+
+    await client.query(
+      'UPDATE challenges SET times_completed = $1, avg_tokens_per_attempt = $2, updated_at = CURRENT_TIMESTAMP WHERE challenge_id = $3',
+      [timesCompleted, avgTokensPerAttempt, challengeId]
+    );
+
+    await client.query('COMMIT');
+  } catch (e) {
+    await client.query('ROLLBACK');
+    console.error('Failed to update challenge stats in DB:', e.message);
+    throw e;
+  } finally {
+    client.release();
   }
+}
 
   challenges.set(challengeId, challenge);
 
@@ -366,12 +403,12 @@ async function updateChallengeStats(challengeId, tokensUsed, score) {
 
 // Get top score for challenge
 async function getChallengeTopScore(challengeId) {
-  await ensureInitialized();
-  return challengeTopScores.get(challengeId) || 0;
+  const res = await db.query(
+    'SELECT MAX(score) as top_score FROM submissions WHERE challenge_id = $1',
+    [challengeId]
+  );
+  return res.rows[0]?.top_score || 0;
 }
-
-// Initialize
-ensureInitialized().catch(e => console.error('Early challenge init failed:', e));
 
 export {
   getRandomChallenge,
@@ -379,5 +416,6 @@ export {
   getAllChallenges,
   updateChallengeStats,
   getChallengeTopScore,
-  INITIAL_CHALLENGES
+  INITIAL_CHALLENGES,
+  seedInitialChallenges
 };

@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import db from '../services/db.js';
+import { seedInitialChallenges } from '../services/challengeService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,7 +24,8 @@ async function setupDatabase() {
 
         console.log('Database tables created successfully with compression optimization.');
 
-        // Test the tables
+        await seedInitialChallenges();
+
         const res = await db.query('SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = $1', ['public']);
         console.log('Tables in database:', res.rows.map(r => r.tablename).join(', '));
 

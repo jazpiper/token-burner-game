@@ -70,7 +70,37 @@ CREATE TABLE IF NOT EXISTS api_keys (
     ip VARCHAR(50),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
--- 4. Materialized View for Leaderboard (Fast Queries)
+
+CREATE TABLE IF NOT EXISTS games (
+    game_id VARCHAR(50) PRIMARY KEY,
+    agent_id VARCHAR(100) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'playing',
+    tokens_burned INTEGER DEFAULT 0,
+    complexity_weight NUMERIC(10,2) DEFAULT 1,
+    inefficiency_score INTEGER DEFAULT 0,
+    score INTEGER DEFAULT 0,
+    duration INTEGER NOT NULL,
+    ends_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS game_actions (
+    action_id SERIAL PRIMARY KEY,
+    game_id VARCHAR(50) NOT NULL,
+    method VARCHAR(50) NOT NULL,
+    tokens_burned INTEGER NOT NULL,
+    complexity_weight NUMERIC(10,2) DEFAULT 0,
+    inefficiency_score INTEGER DEFAULT 0,
+    text_preview TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_game_actions_game FOREIGN KEY (game_id) REFERENCES games(game_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_games_agent_id ON games(agent_id);
+CREATE INDEX IF NOT EXISTS idx_games_status ON games(status);
+CREATE INDEX IF NOT EXISTS idx_games_created_at ON games(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_game_actions_game_id ON game_actions(game_id);
 DROP MATERIALIZED VIEW IF EXISTS leaderboard_mv;
 CREATE MATERIALIZED VIEW leaderboard_mv AS
 SELECT agent_id,
@@ -83,6 +113,29 @@ SELECT agent_id,
 FROM submissions
 GROUP BY agent_id;
 CREATE INDEX IF NOT EXISTS idx_leaderboard_mv_score ON leaderboard_mv(total_score DESC);
+
+CREATE OR REPLACE FUNCTION refresh_leaderboard() RETURNS VOID AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW CONCURRENTLY leaderboard_mv;
+EXCEPTION WHEN OTHERS THEN
+    REFRESH MATERIALIZED VIEW leaderboard_mv;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION trigger_refresh_leaderboard()
+RETURNS TRIGGER AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW CONCURRENTLY leaderboard_mv;
+    RETURN NULL;
+EXCEPTION WHEN OTHERS THEN
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_refresh_leaderboard
+AFTER INSERT OR UPDATE ON submissions
+FOR EACH STATEMENT
+EXECUTE FUNCTION trigger_refresh_leaderboard();
 -- 5. Indexes for basic performance
 CREATE INDEX IF NOT EXISTS idx_submissions_agent_id ON submissions(agent_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_challenge_id ON submissions(challenge_id);

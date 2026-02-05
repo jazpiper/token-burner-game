@@ -1,14 +1,5 @@
-/**
- * GET /api/v2/games/:id - 상태 조회
- */
-import { gameLogic } from '../../shared/gameLogic.js';
+import { getGameById } from '../../services/gameService.js';
 
-// 메모리 저장소 (운영 환경에서는 Vercel KV 또는 Redis 사용 권장)
-const games = new Map();
-
-/**
- * Rate Limiting (간단한 메모리 기반)
- */
 const rateLimitMap = new Map();
 
 function checkRateLimit(identifier, maxRequests = 100, windowMs = 60 * 1000) {
@@ -80,14 +71,12 @@ export default async function handler(req, res) {
     }
 
     // 게임 조회
-    const game = games.get(gameId);
+    const game = await getGameById(gameId);
     if (!game) {
       return res.status(404).json({ error: 'Game not found' });
     }
 
-    // 게임 상태 반환
-    const status = gameLogic.getGameStatus(game);
-    return res.json(status);
+    return res.json(game);
   }
 
   return res.status(404).json({ error: 'Not found', path: req.url });

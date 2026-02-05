@@ -1,14 +1,6 @@
-/**
- * POST /api/v2/games/:id/actions - 액션 수행
- */
 import { gameLogic } from '../../shared/gameLogic.js';
+import { addGameAction, getGameById } from '../../services/gameService.js';
 
-// 메모리 저장소 (운영 환경에서는 Vercel KV 또는 Redis 사용 권장)
-const games = new Map();
-
-/**
- * Rate Limiting (간단한 메모리 기반 - 엄격한 제한)
- */
 const rateLimitMap = new Map();
 
 function checkRateLimit(identifier, maxRequests = 50, windowMs = 60 * 1000) {
@@ -91,26 +83,30 @@ export default async function handler(req, res) {
     }
 
     // 게임 조회
-    const game = games.get(gameId);
+    const game = await getGameById(gameId);
     if (!game) {
       return res.status(404).json({ error: 'Game not found' });
     }
 
-    // 게임 상태 확인
-    const status = gameLogic.getGameStatus(game);
-    if (status.status !== 'playing') {
-      return res.status(400).json({ error: 'Game is not playing', status: status.status });
+    if (game.status !== 'playing') {
+      return res.status(400).json({ error: 'Game is not playing', status: game.status });
     }
 
     // 액션 실행
     try {
-      const result = gameLogic.executeAction(game, method);
+      const gameResult = gameLogic.executeAction(game, method);
 
-      // 게임 상태 업데이트
-      games.set(gameId, game);
+      const result = await addGameAction(gameId, {
+        method,
+        tokensBurned: gameResult.tokensBurned,
+        complexityWeight: gameResult.complexityWeight,
+        inefficiencyScore: gameResult.inefficiencyScore,
+        textPreview: gameResult.text?.substring(0, 500) || ''
+      });
 
       return res.json(result);
     } catch (error) {
+      console.error('Failed to execute action:', error.message);
       return res.status(500).json({ error: error.message });
     }
   }

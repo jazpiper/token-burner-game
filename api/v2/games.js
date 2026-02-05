@@ -1,12 +1,5 @@
-/**
- * POST /api/v2/games/start - 게임 시작
- * POST /api/v2/games/:id/finish - 게임 종료
- */
 import { gameLogic } from '../../shared/gameLogic.js';
-
-// 메모리 저장소 (운영 환경에서는 Vercel KV 또는 Redis 사용 권장)
-const games = new Map();
-const leaderboard = [];
+import { createGame, finishGame, getGameById } from '../../services/gameService.js';
 
 /**
  * Rate Limiting (간단한 메모리 기반)
@@ -63,7 +56,6 @@ export default async function handler(req, res) {
   if (method === 'POST' && pathParts[2] === 'games' && pathParts[3] === 'start') {
     const { duration = 5 } = req.body;
 
-    // 유효성 검사
     if (duration < 1 || duration > 60) {
       return res.status(400).json({
         error: 'Invalid request',
@@ -71,7 +63,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Rate Limiting 체크 (30분당 1회, API Key 기반)
     const apiKey = req.headers['x-api-key'] || 'anonymous';
     if (!checkRateLimit(`start:${apiKey}`, 1, 30 * 60 * 1000)) {
       return res.status(429).json({
@@ -79,15 +70,20 @@ export default async function handler(req, res) {
       });
     }
 
-    const game = gameLogic.createGame(duration);
-    games.set(game.gameId, game);
+    const gameId = gameLogic.generateGameId();
+    try {
+      const game = await createGame({ gameId, agentId: apiKey, duration });
 
-    return res.json({
-      gameId: game.gameId,
-      status: game.status,
-      endsAt: new Date(game.endsAt).toISOString(),
-      duration
-    });
+      return res.json({
+        gameId: game.gameId,
+        status: game.status,
+        endsAt: game.endsAt.toISOString(),
+        duration
+      });
+    } catch (e) {
+      console.error('Failed to create game:', e.message);
+      return res.status(500).json({ error: 'Failed to create game' });
+    }
   }
 
   // POST /api/v2/games/:id/finish - 게임 종료
@@ -101,7 +97,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Rate Limiting 체크
     const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
     if (!checkRateLimit(`finish:${ip}`, 100, 60 * 1000)) {
       return res.status(429).json({
@@ -109,35 +104,18 @@ export default async function handler(req, res) {
       });
     }
 
-    // 게임 조회
-    const game = games.get(gameId);
-    if (!game) {
-      return res.status(404).json({ error: 'Game not found' });
+    try {
+      const result = await finishGame(gameId);
+
+      if (!result) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+
+      return res.json(result);
+    } catch (e) {
+      console.error('Failed to finish game:', e.message);
+      return res.status(500).json({ error: 'Failed to finish game' });
     }
-
-    // 게임 종료
-    const result = gameLogic.finishGame(game);
-
-    // 리더보드에 추가
-    const apiKey = req.headers['x-api-key'] || 'anonymous';
-    leaderboard.push({
-      gameId: result.gameId,
-      agentId: apiKey,
-      score: result.finalScore,
-      tokensBurned: result.tokensBurned,
-      timestamp: new Date().toISOString()
-    });
-
-    // 게임 상태 업데이트
-    games.set(gameId, game);
-
-    // 완료된 게임 정리 (최근 1000개만 유지)
-    if (games.size > 1000) {
-      const oldestId = Array.from(games.keys())[0];
-      games.delete(oldestId);
-    }
-
-    return res.json(result);
   }
 
   return res.status(404).json({ error: 'Not found', path: url });
