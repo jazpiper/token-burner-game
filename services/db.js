@@ -10,9 +10,7 @@ if (!connectionString) {
 
 const pool = new Pool({
     connectionString,
-    ssl: connectionString?.includes('sslmode=prefer') || connectionString?.includes('sslmode=require')
-        ? { rejectUnauthorized: false }
-        : false
+    ssl: connectionString ? { rejectUnauthorized: false } : false
 });
 
 /**
