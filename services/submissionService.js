@@ -1,10 +1,9 @@
 // Submission Service
 // Manages challenge submissions
 
-import { updateChallengeStats, getChallengeById } from './challengeService.js';
+import { updateChallengeStats } from './challengeService.js';
 import db from './db.js';
 
-// Generate submission ID
 function generateSubmissionId() {
   return `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
@@ -17,8 +16,8 @@ async function createSubmission(data) {
     await client.query('BEGIN');
 
     await client.query(
-      `INSERT INTO submissions 
-      (submission_id, agent_id, challenge_id, tokens_used, answer, response_time, score, validation_errors, validation_warnings, validated_at) 
+      `INSERT INTO submissions
+      (submission_id, agent_id, challenge_id, tokens_used, answer, response_time, score, validation_errors, validation_warnings, validated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
         submissionId,
@@ -34,10 +33,7 @@ async function createSubmission(data) {
       ]
     );
 
-    await client.query(
-      'UPDATE challenges SET times_completed = times_completed + 1, avg_tokens_per_attempt = (avg_tokens_per_attempt * times_completed + $1) / (times_completed + 1), updated_at = CURRENT_TIMESTAMP WHERE challenge_id = $2',
-      [data.tokensUsed, data.challengeId]
-    );
+    await updateChallengeStats(data.challengeId, data.tokensUsed, data.score);
 
     await client.query('COMMIT');
 
@@ -64,14 +60,20 @@ async function createSubmission(data) {
 
 async function getSubmissionById(submissionId) {
   try {
-    const res = await db.query('SELECT * FROM submissions WHERE submission_id = $1', [submissionId]);
+    const res = await db.query(
+      `SELECT s.*, c.title as challenge_title, c.difficulty as challenge_difficulty
+       FROM submissions s
+       LEFT JOIN challenges c ON s.challenge_id = c.challenge_id
+       WHERE s.submission_id = $1`,
+      [submissionId]
+    );
 
     if (res.rows.length === 0) {
       return null;
     }
 
     const row = res.rows[0];
-    const submission = {
+    return {
       submissionId: row.submission_id,
       agentId: row.agent_id,
       challengeId: row.challenge_id,
@@ -84,15 +86,9 @@ async function getSubmissionById(submissionId) {
         warnings: row.validation_warnings
       },
       validatedAt: row.validated_at,
-      createdAt: row.created_at
-    };
-
-    const challenge = await getChallengeById(submission.challengeId);
-
-    return {
-      ...submission,
-      challengeTitle: challenge?.title,
-      challengeDifficulty: challenge?.difficulty
+      createdAt: row.created_at,
+      challengeTitle: row.challenge_title,
+      challengeDifficulty: row.challenge_difficulty
     };
   } catch (e) {
     console.error('Failed to fetch submission from DB:', e.message);
@@ -100,32 +96,30 @@ async function getSubmissionById(submissionId) {
   }
 }
 
-// Get agent's submissions
 async function getAgentSubmissions(agentId, filters = {}, page = 1, limit = 20) {
   try {
     let queryText = 'SELECT * FROM submissions WHERE agent_id = $1';
+    let countQuery = 'SELECT COUNT(*) FROM submissions WHERE agent_id = $1';
     let params = [agentId];
-    let paramIndex = 2;
+    let countParams = [agentId];
 
     if (filters.challengeId) {
-      queryText += ` AND challenge_id = $${paramIndex++}`;
+      const filterCondition = ' AND challenge_id = $2';
+      queryText += filterCondition;
+      countQuery += filterCondition;
       params.push(filters.challengeId);
+      countParams.push(filters.challengeId);
     }
 
-    queryText += ` ORDER BY created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+    queryText += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit);
     params.push((page - 1) * limit);
 
-    const res = await db.query(queryText, params);
+    const [res, countRes] = await Promise.all([
+      db.query(queryText, params),
+      db.query(countQuery, countParams)
+    ]);
 
-    // Get count for pagination
-    let countQuery = 'SELECT COUNT(*) FROM submissions WHERE agent_id = $1';
-    let countParams = [agentId];
-    if (filters.challengeId) {
-      countQuery += ' AND challenge_id = $2';
-      countParams.push(filters.challengeId);
-    }
-    const countRes = await db.query(countQuery, countParams);
     const total = parseInt(countRes.rows[0].count);
 
     const mappedSubmissions = res.rows.map(row => ({
@@ -134,7 +128,7 @@ async function getAgentSubmissions(agentId, filters = {}, page = 1, limit = 20) 
       challengeId: row.challenge_id,
       tokensUsed: row.tokens_used,
       answer: row.answer,
-      responseTime: row.responseTime,
+      responseTime: row.response_time,
       score: row.score,
       validation: {
         errors: row.validation_errors,
@@ -153,17 +147,10 @@ async function getAgentSubmissions(agentId, filters = {}, page = 1, limit = 20) 
     };
   } catch (e) {
     console.error('Failed to fetch agent submissions from DB:', e.message);
-    return {
-      submissions: [],
-      total: 0,
-      page,
-      limit,
-      totalPages: 0
-    };
+    throw e;
   }
 }
 
-// Get all submissions (for leaderboard calculation)
 async function getAllSubmissions() {
   try {
     const res = await db.query('SELECT * FROM submissions');
@@ -180,7 +167,6 @@ async function getAllSubmissions() {
   }
 }
 
-// Get submission count by agent
 async function getSubmissionCount(agentId) {
   try {
     const res = await db.query('SELECT COUNT(*) FROM submissions WHERE agent_id = $1', [agentId]);

@@ -1,49 +1,16 @@
 import { gameLogic } from '../../shared/gameLogic.js';
 import { createGame, finishGame, getGameById } from '../../services/gameService.js';
+import { checkRateLimit } from '../../shared/rateLimitingService.js';
 
-/**
- * Rate Limiting (간단한 메모리 기반)
- */
-const rateLimitMap = new Map();
-
-function checkRateLimit(identifier, maxRequests = 100, windowMs = 60 * 1000) {
-  const now = Date.now();
-  const record = rateLimitMap.get(identifier);
-
-  if (!record) {
-    rateLimitMap.set(identifier, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-
-  if (now > record.resetAt) {
-    rateLimitMap.set(identifier, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-
-  if (record.count >= maxRequests) {
-    return false;
-  }
-
-  record.count++;
-  return true;
-}
-
-/**
- * CORS 헤더 설정
- */
 function setCORSHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
 }
 
-/**
- * Vercel Serverless Function Handler
- */
 export default async function handler(req, res) {
   setCORSHeaders(res);
 
-  // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -52,7 +19,6 @@ export default async function handler(req, res) {
   const pathname = url.split('?')[0];
   const pathParts = pathname.split('/').filter(Boolean);
 
-  // POST /api/v2/games/start - 게임 시작
   if (method === 'POST' && pathParts[2] === 'games' && pathParts[3] === 'start') {
     const { duration = 5 } = req.body;
 
@@ -64,7 +30,9 @@ export default async function handler(req, res) {
     }
 
     const apiKey = req.headers['x-api-key'] || 'anonymous';
-    if (!checkRateLimit(`start:${apiKey}`, 1, 30 * 60 * 1000)) {
+    const rateLimitResult = await checkRateLimit(`start:${apiKey}`, 1, 30 * 60 * 1000);
+
+    if (!rateLimitResult.allowed) {
       return res.status(429).json({
         error: 'You can only start a game once every 30 minutes. Please try again later.'
       });
@@ -86,7 +54,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // POST /api/v2/games/:id/finish - 게임 종료
   if (method === 'POST' && pathParts[2] === 'games' && pathParts[4] === 'finish') {
     const gameId = pathParts[3];
 
@@ -98,7 +65,9 @@ export default async function handler(req, res) {
     }
 
     const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
-    if (!checkRateLimit(`finish:${ip}`, 100, 60 * 1000)) {
+    const rateLimitResult = await checkRateLimit(`finish:${ip}`, 100, 60 * 1000);
+
+    if (!rateLimitResult.allowed) {
       return res.status(429).json({
         error: 'Too many requests, please try again later'
       });

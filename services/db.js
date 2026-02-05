@@ -26,17 +26,7 @@ export async function query(text, params) {
         throw new Error('Database not configured. Check POSTGRES_URL.');
     }
 
-    try {
-        return await pool.query(text, params);
-    } catch (error) {
-        // If it's a self-signed cert error, try to set the global flag as a fallback
-        if (error.message.includes('self-signed certificate')) {
-            console.warn('Handling self-signed cert error with global bypass...');
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-            return await pool.query(text, params);
-        }
-        throw error;
-    }
+    return await pool.query(text, params);
 }
 
 export async function getClient() {

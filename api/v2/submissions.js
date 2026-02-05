@@ -1,6 +1,8 @@
+import jwt from 'jsonwebtoken';
+
 /**
  * Submission API Endpoints
- * 
+ *
  * POST /api/v2/submissions - Submit result
  * GET /api/v2/submissions/:id - Get submission details
  * GET /api/v2/submissions - List agent submissions
@@ -18,17 +20,24 @@ import {
   getChallengeById
 } from '../../services/challengeService.js';
 
-/**
- * Vercel Serverless Function Handler
- */
-export default async function (req, res) {
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+function verifyToken(token) {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
+  }
+}
+
+export default async function handler(req, res) {
   const { url, method } = req;
   const pathname = url.split('?')[0];
   const pathParts = pathname.split('/').filter(Boolean);
 
   // Route: POST /api/v2/submissions
   if (method === 'POST' && pathParts.length === 3 && pathParts[2] === 'submissions') {
-    return handler(req, res);
+    return submitHandler(req, res);
   }
 
   // Route: GET /api/v2/submissions/:id
@@ -44,7 +53,7 @@ export default async function (req, res) {
   return res.status(404).json({ error: 'Not Found', path: pathname || url });
 }
 
-export async function handler(req, res) {
+export async function submitHandler(req, res) {
   // CORS 헤더
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -60,110 +69,107 @@ export async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    // 요청 본문 파싱
-    const { challengeId, tokensUsed, answer, responseTime } = req.body || {};
+  // JWT 토큰 검증
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'Authorization header required' });
+  }
 
-    // 필수 필드 검증
-    if (!challengeId || !tokensUsed || !answer) {
-      return res.status(400).json({
-        error: 'Bad Request',
-        message: 'Missing required fields',
-        details: [
-          { field: 'challengeId', message: 'challengeId is required' },
-          { field: 'tokensUsed', message: 'tokensUsed is required' },
-          { field: 'answer', message: 'answer is required' }
-        ]
-      });
-    }
+  const token = authHeader.substring(7);
+  const decoded = verifyToken(token);
+  if (!decoded) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'Invalid token' });
+  }
 
-    // 타입 검증
-    if (typeof tokensUsed !== 'number' || tokensUsed < 0) {
-      return res.status(400).json({
-        error: 'Bad Request',
-        message: 'tokensUsed must be a positive number'
-      });
-    }
+  const agentId = decoded.agentId;
 
-    if (typeof answer !== 'string' || answer.length === 0) {
-      return res.status(400).json({
-        error: 'Bad Request',
-        message: 'answer must be a non-empty string'
-      });
-    }
+  // 요청 본문 파싱
+  const { challengeId, tokensUsed, answer, responseTime } = req.body || {};
 
-    // 챌린지 존재 확인
-    const challenge = await getChallengeById(challengeId);
-    if (!challenge) {
-      return res.status(404).json({
-        error: 'Not Found',
-        message: `Challenge ${challengeId} not found`
-      });
-    }
-
-    // Agent ID 추출 (헤더 또는 본문에서)
-    const agentId = req.headers['x-agent-id'] || req.body.agentId;
-    if (!agentId) {
-      return res.status(400).json({
-        error: 'Bad Request',
-        message: 'agentId is required (in X-Agent-Id header or request body)'
-      });
-    }
-
-    // 토큰 검증
-    const validation = await validateSubmission(
-      { agentId, challengeId, tokensUsed, answer, responseTime },
-      challengeId
-    );
-
-    if (!validation.valid) {
-      return res.status(400).json({
-        error: 'Validation Failed',
-        message: 'Submission validation failed',
-        validation: {
-          errors: validation.errors,
-          warnings: validation.warnings
-        }
-      });
-    }
-
-    // 점수 계산
-    const scoreResult = calculateScore(
-      { tokensUsed, answer },
-      challenge
-    );
-
-    // 제출 생성
-    const submission = await createSubmission({
-      agentId,
-      challengeId,
-      tokensUsed,
-      answer,
-      responseTime: responseTime || Date.now(), // 기본값: 현재 시간
-      score: scoreResult.score,
-      validation
+  // 필수 필드 검증
+  if (!challengeId || !tokensUsed || !answer) {
+    return res.status(400).json({
+      error: 'Bad Request',
+      message: 'Missing required fields',
+      details: [
+        { field: 'challengeId', message: 'challengeId is required' },
+        { field: 'tokensUsed', message: 'tokensUsed is required' },
+        { field: 'answer', message: 'answer is required' }
+      ]
     });
+  }
 
-    return res.status(201).json({
-      submissionId: submission.submissionId,
-      agentId: submission.agentId,
-      challengeId: submission.challengeId,
-      tokensUsed: submission.tokensUsed,
-      score: submission.score,
-      scoreBreakdown: scoreResult.breakdown,
+  // 타입 검증
+  if (typeof tokensUsed !== 'number' || tokensUsed < 0) {
+    return res.status(400).json({
+      error: 'Bad Request',
+      message: 'tokensUsed must be a positive number'
+    });
+  }
+
+  if (typeof answer !== 'string' || answer.length === 0) {
+    return res.status(400).json({
+      error: 'Bad Request',
+      message: 'answer must be a non-empty string'
+    });
+  }
+
+  // 챌린지 존재 확인
+  const challenge = await getChallengeById(challengeId);
+  if (!challenge) {
+    return res.status(404).json({
+      error: 'Not Found',
+      message: `Challenge ${challengeId} not found`
+    });
+  }
+
+  // 토큰 검증
+  const validation = await validateSubmission(
+    { agentId, challengeId, tokensUsed, answer, responseTime },
+    challenge
+  );
+
+  if (!validation.valid) {
+    return res.status(400).json({
+      error: 'Validation Failed',
+      message: 'Submission validation failed',
       validation: {
         errors: validation.errors,
         warnings: validation.warnings
-      },
-      validatedAt: submission.validatedAt
-    });
-  } catch (error) {
-    console.error('Submit result error:', error);
-    return res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to submit result'
+      }
     });
   }
+
+  // 점수 계산
+  const scoreResult = calculateScore(
+    { tokensUsed, answer },
+    challenge
+  );
+
+  // 제출 생성
+  const submission = await createSubmission({
+    agentId,
+    challengeId,
+    tokensUsed,
+    answer,
+    responseTime: responseTime || Date.now(),
+    score: scoreResult.score,
+    validation
+  });
+
+  return res.status(201).json({
+    submissionId: submission.submissionId,
+    agentId: submission.agentId,
+    challengeId: submission.challengeId,
+    tokensUsed: submission.tokensUsed,
+    score: submission.score,
+    scoreBreakdown: scoreResult.breakdown,
+    validation: {
+      errors: validation.errors,
+      warnings: validation.warnings
+    },
+    validatedAt: submission.validatedAt
+  });
 }
 
 /**
@@ -192,7 +198,19 @@ export async function getByIdHandler(req, res) {
     const pathParts = pathname.split('/');
     const submissionId = pathParts[pathParts.length - 1];
 
-    // 제출 상세 조회 (Async)
+    // JWT 토큰 검증
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Authorization header required' });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Invalid token' });
+    }
+
+    // 제출 상세 조회
     const submission = await getSubmissionById(submissionId);
 
     if (!submission) {
@@ -200,6 +218,11 @@ export async function getByIdHandler(req, res) {
         error: 'Not Found',
         message: `Submission ${submissionId} not found`
       });
+    }
+
+    // Agent ID 검증 - 토큰의 agentId와 데이터의 agentId 비교
+    if (decoded.agentId !== submission.agentId) {
+      return res.status(403).json({ error: 'Forbidden', message: 'Access denied' });
     }
 
     return res.json(submission);
@@ -233,15 +256,19 @@ export async function listHandler(req, res) {
   }
 
   try {
-    // Agent ID 추출
-    const agentId = req.headers['x-agent-id'] || req.query?.agentId;
-
-    if (!agentId) {
-      return res.status(400).json({
-        error: 'Bad Request',
-        message: 'agentId is required (in X-Agent-Id header or query parameter)'
-      });
+    // JWT 토큰 검증
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Authorization header required' });
     }
+
+    const token = authHeader.substring(7);
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Invalid token' });
+    }
+
+    const agentId = decoded.agentId;
 
     // Query parameters
     const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;
@@ -253,7 +280,7 @@ export async function listHandler(req, res) {
     const filters = {};
     if (challengeId) filters.challengeId = challengeId;
 
-    // 에이전트 제출 기록 조회 (Async)
+    // 에이전트 목록 조회
     const result = await getAgentSubmissions(agentId, filters, page, limit);
 
     return res.json(result);
