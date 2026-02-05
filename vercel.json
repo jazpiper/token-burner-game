@@ -10,6 +10,13 @@
     {
       "src": "/api/v2/(.*)",
       "dest": "/api/v2/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/$1"
     }
   ]
 }
