@@ -44,7 +44,8 @@ function setCORSHeaders(res) {
 }
 
 /**
- * Vercel Serverless Function Handler
+ * GET /api/v2/leaderboard
+ * List leaderboard entries
  */
 export default async function handler(req, res) {
   setCORSHeaders(res);

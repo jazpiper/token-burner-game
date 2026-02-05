@@ -19,9 +19,30 @@ import {
 } from '../../services/challengeService.js';
 
 /**
- * POST /api/v2/submissions
- * Submit challenge result
+ * Vercel Serverless Function Handler
  */
+export default async function (req, res) {
+  const { url, method } = req;
+  const pathParts = url.split('/').filter(Boolean);
+
+  // Route: POST /api/v2/submissions
+  if (method === 'POST' && pathParts.length === 3 && pathParts[2] === 'submissions') {
+    return handler(req, res);
+  }
+
+  // Route: GET /api/v2/submissions/:id
+  if (method === 'GET' && pathParts.length === 4 && pathParts[2] === 'submissions') {
+    return getByIdHandler(req, res);
+  }
+
+  // Route: GET /api/v2/submissions
+  if (method === 'GET' && pathParts.length === 3 && pathParts[2] === 'submissions') {
+    return listHandler(req, res);
+  }
+
+  return res.status(404).json({ error: 'Not Found', path: url });
+}
+
 export async function handler(req, res) {
   // CORS 헤더
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');

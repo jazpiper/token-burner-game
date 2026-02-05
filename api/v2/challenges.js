@@ -12,9 +12,31 @@ import {
 } from '../../services/challengeService.js';
 
 /**
- * GET /api/v2/challenges/random
- * Get random challenge
+ * Vercel Serverless Function Handler
  */
+export default async function (req, res) {
+  const { url } = req;
+  const pathParts = url.split('/').filter(Boolean);
+
+  // Route: /api/v2/challenges/random
+  if (pathParts[pathParts.length - 1] === 'random') {
+    return handler(req, res);
+  }
+
+  // Route: /api/v2/challenges/:id
+  // We check if the last part is a potential ID (not 'challenges')
+  if (pathParts.length > 3 && pathParts[2] === 'challenges' && pathParts[3] !== 'random') {
+    return getByIdHandler(req, res);
+  }
+
+  // Route: /api/v2/challenges
+  if (pathParts.length === 3 && pathParts[2] === 'challenges') {
+    return listHandler(req, res);
+  }
+
+  return res.status(404).json({ error: 'Not Found', path: url });
+}
+
 export async function handler(req, res) {
   // CORS 헤더
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
