@@ -84,12 +84,12 @@ export default async function handler(req, res) {
   }
 
   // API Key 검증 (Shared Store 사용)
-  if (!validateApiKey(apiKey)) {
+  if (!await validateApiKey(apiKey)) {
     return res.status(401).json({ error: 'Invalid API key' });
   }
 
   // 정보 조회
-  const keyInfo = getApiKeyInfo(apiKey);
+  const keyInfo = await getApiKeyInfo(apiKey);
 
   // JWT 토큰 발급
   const token = generateToken({
