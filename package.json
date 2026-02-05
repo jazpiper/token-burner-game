@@ -2,15 +2,12 @@
   "name": "token-burner-game",
   "version": "2.0.0",
   "description": "3DMark-style AI challenge platform - waste your tokens here!",
-  "main": "api/server.js",
   "type": "module",
   "scripts": {
-    "start": "node api/server.js",
-    "dev": "node --watch api/server.js",
     "test": "node tests/test.js",
-    "dev:frontend": "vite",
-    "build:frontend": "vite build",
-    "preview:frontend": "vite preview"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [
     "ai",
@@ -22,8 +19,6 @@
   "author": "Token Burner Game Team",
   "license": "MIT",
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "vue-router": "^4.6.4"
   },
