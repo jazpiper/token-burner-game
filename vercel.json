@@ -2,28 +2,66 @@
   "version": 2,
   "builds": [
     {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
       "src": "api/**/*.js",
       "use": "@vercel/node"
     }
   ],
-  "routes": [
-    {
-      "src": "/api/v2/(.*)",
-      "dest": "/api/v2/$1"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/dist/assets/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/dist/$1"
-    }
-  ],
   "rewrites": [
+    {
+      "source": "/api/v2/challenges/random",
+      "destination": "/api/v2/challenges.js"
+    },
+    {
+      "source": "/api/v2/challenges/:path*",
+      "destination": "/api/v2/challenges.js"
+    },
+    {
+      "source": "/api/v2/challenges",
+      "destination": "/api/v2/challenges.js"
+    },
+    {
+      "source": "/api/v2/submissions/:path*",
+      "destination": "/api/v2/submissions.js"
+    },
+    {
+      "source": "/api/v2/submissions",
+      "destination": "/api/v2/submissions.js"
+    },
+    {
+      "source": "/api/v2/games/:id/:path*",
+      "destination": "/api/v2/games.js"
+    },
+    {
+      "source": "/api/v2/games/:id",
+      "destination": "/api/v2/status.js"
+    },
+    {
+      "source": "/api/v2/keys/:path*",
+      "destination": "/api/v2/keys.js"
+    },
+    {
+      "source": "/api/v2/auth/:path*",
+      "destination": "/api/v2/auth.js"
+    },
+    {
+      "source": "/api/v2/health",
+      "destination": "/api/v2/health.js"
+    },
+    {
+      "source": "/api/v2/leaderboard",
+      "destination": "/api/v2/leaderboard.js"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"

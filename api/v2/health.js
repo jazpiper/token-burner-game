@@ -1,11 +1,7 @@
 /**
  * GET /api/v2/health - 헬스체크
  */
-import { gameLogic } from '../../shared/gameLogic.js';
-
-// 메모리 저장소 (운영 환경에서는 Vercel KV 또는 Redis 사용 권장)
-const games = new Map();
-const leaderboard = [];
+import db from '../../services/db.js';
 
 /**
  * CORS 헤더 설정
@@ -31,20 +27,34 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // 경로 파싱
-  const pathParts = req.url.split('/').filter(Boolean);
+  try {
+    // 경로 파싱
+    const pathname = req.url.split('?')[0];
+    const pathParts = pathname.split('/').filter(Boolean);
 
-  // GET /api/v2/health
-  if (pathParts[2] === 'health') {
-    return res.json({
-      status: 'healthy',
-      database: 'not configured (using memory storage)',
-      timestamp: new Date().toISOString(),
-      activeGames: games.size,
-      totalScores: leaderboard.length,
-      env: process.env.NODE_ENV || 'development'
-    });
+    // GET /api/v2/health
+    if (pathParts[2] === 'health') {
+      let dbStatus = 'not configured';
+      
+      if (process.env.POSTGRES_URL) {
+        try {
+          await db.query('SELECT 1');
+          dbStatus = 'connected';
+        } catch (e) {
+          dbStatus = 'error: ' + e.message;
+        }
+      }
+
+      return res.json({
+        status: 'healthy',
+        database: dbStatus,
+        timestamp: new Date().toISOString(),
+        env: process.env.NODE_ENV || 'production'
+      });
+    }
+
+    return res.status(404).json({ error: 'Not found', path: req.url });
+  } catch (error) {
+    return res.status(500).json({ status: 'error', message: error.message });
   }
-
-  return res.status(404).json({ error: 'Not found', path: req.url });
 }

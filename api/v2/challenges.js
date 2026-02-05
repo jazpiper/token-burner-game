@@ -12,14 +12,36 @@ import {
 } from '../../services/challengeService.js';
 
 /**
- * GET /api/v2/challenges/random
- * Get random challenge
+ * Vercel Serverless Function Handler
  */
+export default async function (req, res) {
+  const { url } = req;
+  const pathname = url.split('?')[0];
+  const pathParts = pathname.split('/').filter(Boolean);
+
+  // Route: /api/v2/challenges/random
+  if (pathParts[pathParts.length - 1] === 'random') {
+    return handler(req, res);
+  }
+
+  // Route: /api/v2/challenges/:id
+  if (pathParts.length > 3 && pathParts[2] === 'challenges' && pathParts[3] !== 'random') {
+    return getByIdHandler(req, res);
+  }
+
+  // Route: /api/v2/challenges
+  if (pathParts.length === 3 && pathParts[2] === 'challenges') {
+    return listHandler(req, res);
+  }
+
+  return res.status(404).json({ error: 'Not Found', path: pathname || url });
+}
+
 export async function handler(req, res) {
   // CORS 헤더
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
 
   // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
@@ -32,17 +54,18 @@ export async function handler(req, res) {
   }
 
   try {
-    // Query parameters
-    const difficulty = req.query.difficulty;
-    const type = req.query.type;
+    // URL 파라미터 파싱
+    const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;
+    const difficulty = urlParams.get('difficulty');
+    const type = urlParams.get('type');
 
     // 필터 생성
     const filters = {};
     if (difficulty) filters.difficulty = difficulty;
     if (type) filters.type = type;
 
-    // 랜덤 챌린지 반환
-    const challenge = getRandomChallenge(filters);
+    // 랜덤 챌린지 반환 (Async 호출)
+    const challenge = await getRandomChallenge(filters);
 
     if (!challenge) {
       return res.status(404).json({
@@ -69,7 +92,7 @@ export async function getByIdHandler(req, res) {
   // CORS 헤더
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
 
   // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
@@ -83,11 +106,12 @@ export async function getByIdHandler(req, res) {
 
   try {
     // URL에서 challenge ID 추출
-    const pathParts = req.url.split('/');
+    const pathname = req.url.split('?')[0];
+    const pathParts = pathname.split('/');
     const challengeId = pathParts[pathParts.length - 1];
 
-    // 챌린지 상세 조회
-    const challenge = getChallengeById(challengeId);
+    // 챌린지 상세 조회 (Async 호출)
+    const challenge = await getChallengeById(challengeId);
 
     if (!challenge) {
       return res.status(404).json({
@@ -114,7 +138,7 @@ export async function listHandler(req, res) {
   // CORS 헤더
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
 
   // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
@@ -127,19 +151,20 @@ export async function listHandler(req, res) {
   }
 
   try {
-    // Query parameters
-    const difficulty = req.query.difficulty;
-    const type = req.query.type;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    // URL 파라미터 파싱
+    const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;
+    const difficulty = urlParams.get('difficulty');
+    const type = urlParams.get('type');
+    const page = parseInt(urlParams.get('page')) || 1;
+    const limit = parseInt(urlParams.get('limit')) || 20;
 
     // 필터 생성
     const filters = {};
     if (difficulty) filters.difficulty = difficulty;
     if (type) filters.type = type;
 
-    // 전체 챌린지 목록 조회
-    const result = getAllChallenges(filters, page, limit);
+    // 전체 챌린지 목록 조회 (Async 호출)
+    const result = await getAllChallenges(filters, page, limit);
 
     return res.json(result);
   } catch (error) {

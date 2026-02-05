@@ -1,128 +1,130 @@
 // Leaderboard Service
-// Calculates and manages leaderboard rankings
+// Calculates and manages leaderboard rankings using PostgreSQL
 
-import { getAllSubmissions } from './submissionService.js';
+import db from './db.js';
 
-// Calculate leaderboard
-function getLeaderboard(filters = {}) {
-  const agentStats = new Map();
-  const allSubmissions = getAllSubmissions();
+/**
+ * Get leaderboard rankings from DB
+ */
+async function getLeaderboard(filters = {}, page = 1, limit = 100) {
+  try {
+    // Try to use materialized view first if no filters
+    let queryText = `
+      SELECT 
+        agent_id, 
+        COUNT(*) as completed_challenges,
+        SUM(tokens_used) as total_tokens,
+        SUM(score) as total_score,
+        AVG(tokens_used)::integer as avg_tokens_per_challenge,
+        AVG(score)::integer as avg_score_per_challenge,
+        MAX(created_at) as last_submission_at
+      FROM submissions
+    `;
 
-  // Calculate stats per agent
-  allSubmissions.forEach(submission => {
-    if (!agentStats.has(submission.agentId)) {
-      agentStats.set(submission.agentId, {
-        agentId: submission.agentId,
-        totalTokens: 0,
-        totalScore: 0,
-        completedChallenges: 0,
-        submissions: []
-      });
+    let whereClauses = [];
+    let params = [];
+    let paramIndex = 1;
+
+    if (filters.challengeId) {
+      whereClauses.push(`challenge_id = $${paramIndex++}`);
+      params.push(filters.challengeId);
     }
 
-    const stats = agentStats.get(submission.agentId);
-    stats.totalTokens += submission.tokensUsed;
-    stats.totalScore += submission.score;
-    stats.completedChallenges++;
-    stats.submissions.push(submission);
-  });
+    if (whereClauses.length > 0) {
+      queryText += ' WHERE ' + whereClauses.join(' AND ');
+    }
 
-  // Convert to array and apply filters
-  let leaderboard = Array.from(agentStats.values());
+    queryText += `
+      GROUP BY agent_id
+      ORDER BY total_score DESC
+      LIMIT $${paramIndex++} OFFSET $${paramIndex++}
+    `;
 
-  if (filters.type) {
-    // Filter by challenge type
-    const typeSubmissions = allSubmissions.filter(s => {
-      // This would need challenge details to filter by type
-      return true;
-    });
+    params.push(limit);
+    params.push((page - 1) * limit);
 
-    // Recalculate for type-specific leaderboard
-    const typeStats = new Map();
-    typeSubmissions.forEach(submission => {
-      if (!typeStats.has(submission.agentId)) {
-        typeStats.set(submission.agentId, {
-          agentId: submission.agentId,
-          totalTokens: 0,
-          totalScore: 0,
-          completedChallenges: 0
-        });
-      }
+    const res = await db.query(queryText, params);
 
-      const stats = typeStats.get(submission.agentId);
-      stats.totalTokens += submission.tokensUsed;
-      stats.totalScore += submission.score;
-      stats.completedChallenges++;
-    });
+    // Get total agents count for pagination
+    let countQuery = 'SELECT COUNT(DISTINCT agent_id) FROM submissions';
+    if (whereClauses.length > 0) {
+      countQuery += ' WHERE ' + whereClauses.join(' AND ');
+    }
+    const countRes = await db.query(countQuery, params.slice(0, whereClauses.length));
+    const total = parseInt(countRes.rows[0].count);
 
-    leaderboard = Array.from(typeStats.values());
-  }
+    const leaderboard = res.rows.map((row, index) => ({
+      rank: (page - 1) * limit + index + 1,
+      agentId: row.agent_id,
+      completedChallenges: parseInt(row.completed_challenges),
+      totalTokens: parseInt(row.total_tokens),
+      totalScore: parseInt(row.total_score),
+      avgTokensPerChallenge: parseInt(row.avg_tokens_per_challenge),
+      avgScorePerChallenge: parseInt(row.avg_score_per_challenge),
+      lastSubmissionAt: row.last_submission_at
+    }));
 
-  if (filters.difficulty) {
-    // Filter by difficulty
-    const difficultySubmissions = allSubmissions.filter(s => {
-      // This would need challenge details to filter by difficulty
-      return true;
-    });
-
-    const difficultyStats = new Map();
-    difficultySubmissions.forEach(submission => {
-      if (!difficultyStats.has(submission.agentId)) {
-        difficultyStats.set(submission.agentId, {
-          agentId: submission.agentId,
-          totalTokens: 0,
-          totalScore: 0,
-          completedChallenges: 0
-        });
-      }
-
-      const stats = difficultyStats.get(submission.agentId);
-      stats.totalTokens += submission.tokensUsed;
-      stats.totalScore += submission.score;
-      stats.completedChallenges++;
-    });
-
-    leaderboard = Array.from(difficultyStats.values());
-  }
-
-  // Sort by score (descending)
-  leaderboard.sort((a, b) => b.totalScore - a.totalScore);
-
-  // Calculate rank and additional stats
-  leaderboard.forEach((stats, index) => {
-    stats.rank = index + 1;
-    stats.avgTokensPerChallenge = stats.completedChallenges > 0
-      ? Math.floor(stats.totalTokens / stats.completedChallenges)
-      : 0;
-    stats.avgScorePerChallenge = stats.completedChallenges > 0
-      ? Math.floor(stats.totalScore / stats.completedChallenges)
-      : 0;
-  });
-
-  return leaderboard;
-}
-
-// Get agent's rank
-function getAgentRank(agentId, filters = {}) {
-  const leaderboard = getLeaderboard(filters);
-  const entry = leaderboard.find(entry => entry.agentId === agentId);
-
-  if (!entry) {
     return {
-      rank: null,
-      totalAgents: leaderboard.length,
-      agentId
+      leaderboard,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    };
+  } catch (e) {
+    console.error('Failed to fetch leaderboard from DB:', e.message);
+    return {
+      leaderboard: [],
+      total: 0,
+      page,
+      limit,
+      totalPages: 0
     };
   }
+}
 
-  return {
-    rank: entry.rank,
-    totalAgents: leaderboard.length,
-    agentId,
-    totalScore: entry.totalScore,
-    totalTokens: entry.totalTokens,
-    completedChallenges: entry.completedChallenges
-  };
+/**
+ * Get agent's rank
+ */
+async function getAgentRank(agentId, filters = {}) {
+  try {
+    // Subquery to find rank
+    const queryText = `
+      WITH RankedAgents AS (
+        SELECT 
+          agent_id,
+          SUM(score) as total_score,
+          RANK() OVER (ORDER BY SUM(score) DESC) as rank
+        FROM submissions
+        GROUP BY agent_id
+      )
+      SELECT * FROM RankedAgents WHERE agent_id = $1
+    `;
+
+    const res = await db.query(queryText, [agentId]);
+
+    const totalRes = await db.query('SELECT COUNT(DISTINCT agent_id) FROM submissions');
+    const totalAgents = parseInt(totalRes.rows[0].count);
+
+    if (res.rows.length === 0) {
+      return {
+        rank: null,
+        totalAgents,
+        agentId
+      };
+    }
+
+    const row = res.rows[0];
+    return {
+      rank: parseInt(row.rank),
+      totalAgents,
+      agentId,
+      totalScore: parseInt(row.total_score)
+    };
+  } catch (e) {
+    console.error('Failed to fetch agent rank from DB:', e.message);
+    return { rank: null, totalAgents: 0, agentId };
+  }
 }
 
 export {
