@@ -9,7 +9,7 @@ import { getChallengeById } from './challengeService.js';
 // Validate submission
 async function validateSubmission(submission, challengeId) {
   const validations = [];
-  const challenge = getChallengeById(challengeId);
+  const challenge = await getChallengeById(challengeId);
 
   if (!challenge) {
     return {
@@ -21,7 +21,7 @@ async function validateSubmission(submission, challengeId) {
 
   // Stage 1: Range check
   if (submission.tokensUsed < challenge.expectedTokens.min ||
-      submission.tokensUsed > challenge.expectedTokens.max * 2) {
+    submission.tokensUsed > challenge.expectedTokens.max * 2) {
     validations.push({
       stage: 1,
       error: 'out_of_range',
@@ -62,7 +62,7 @@ async function validateSubmission(submission, challengeId) {
   });
 
   // Stage 4: History-based validation
-  const agentHistory = getAgentSubmissions(submission.agentId, { challengeId });
+  const agentHistory = await getAgentSubmissions(submission.agentId, { challengeId });
   const historySubmissions = agentHistory.submissions || [];
 
   if (historySubmissions.length > 0) {

@@ -32,8 +32,8 @@ export default async function handler(req, res) {
 
   // IP 주소 추출
   const ip = req.headers['x-forwarded-for']?.split(',')[0] ||
-             req.headers['x-real-ip'] ||
-             'unknown';
+    req.headers['x-real-ip'] ||
+    'unknown';
 
   // Rate Limiting 체크 (IP 기반, 30분당 1회)
   const rateLimitKey = `register:${ip}`;
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
   const apiKey = generateApiKey();
 
   // API Key 저장
-  storeApiKey(apiKey, finalAgentId, ip);
+  await storeApiKey(apiKey, finalAgentId, ip);
 
   // Rate Limiting 카운터 증가
   incrementRateLimit(rateLimitKey);

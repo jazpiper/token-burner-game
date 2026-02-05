@@ -1,17 +1,55 @@
 /**
  * API Key Store - Shared storage for API keys
- * In-memory Map for development. Use Vercel KV or Redis for production.
+ * Integrated with PostgreSQL
  */
+import db from '../services/db.js';
 
-// API Keys storage: { apiKey: { agentId, createdAt, ip } }
+// API Keys storage cache
 const apiKeys = new Map();
 
 // Rate limiting storage for API key registration: { identifier: { count, resetAt } }
 const rateLimitMap = new Map();
 
 /**
+ * Initialize API Key Store
+ */
+async function initializeKeyStore() {
+  try {
+    // Ensure table exists
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        api_key VARCHAR(100) PRIMARY KEY,
+        agent_id VARCHAR(100) NOT NULL,
+        ip VARCHAR(50),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Load existing keys into memory cache
+    const res = await db.query('SELECT * FROM api_keys');
+    res.rows.forEach(row => {
+      apiKeys.set(row.api_key, {
+        agentId: row.agent_id,
+        createdAt: row.created_at,
+        ip: row.ip
+      });
+    });
+    console.log(`Loaded ${res.rows.length} API keys from database.`);
+
+    // Load from ENV as well
+    const defaultKeys = process.env.API_KEYS?.split(',').map(k => k.trim()) || [];
+    for (const key of defaultKeys) {
+      if (key && !apiKeys.has(key)) {
+        await storeApiKey(key, 'default', 'system');
+      }
+    }
+  } catch (e) {
+    console.error('Failed to initialize API key store:', e.message);
+  }
+}
+
+/**
  * API Key 생성
- * Format: jzp-{random}-{timestamp}
  */
 export function generateApiKey() {
   const timestamp = Date.now().toString(36);
@@ -20,8 +58,7 @@ export function generateApiKey() {
 }
 
 /**
- * Agent ID 생성 (자동 생성용)
- * Format: agent-{random}
+ * Agent ID 생성
  */
 export function generateAgentId() {
   const random = Math.random().toString(36).substring(2, 10);
@@ -30,7 +67,6 @@ export function generateAgentId() {
 
 /**
  * Agent ID 유효성 검사
- * 알파벳, 숫자, 하이픈만 허용, 1-50자
  */
 export function validateAgentId(agentId) {
   return /^[a-zA-Z0-9-]{1,50}$/.test(agentId);
@@ -52,22 +88,27 @@ export function getApiKeyInfo(apiKey) {
 }
 
 /**
- * API Key 저장
+ * API Key 저장 (DB + Cache)
  */
-export function storeApiKey(apiKey, agentId, ip) {
+export async function storeApiKey(apiKey, agentId, ip) {
   apiKeys.set(apiKey, {
     agentId,
     createdAt: new Date().toISOString(),
     ip
   });
+
+  try {
+    await db.query(
+      'INSERT INTO api_keys (api_key, agent_id, ip) VALUES ($1, $2, $3) ON CONFLICT (api_key) DO NOTHING',
+      [apiKey, agentId, ip]
+    );
+  } catch (e) {
+    console.error('Failed to save API key to DB:', e.message);
+  }
 }
 
 /**
  * Rate Limiting 체크
- * @param {string} identifier - IP 주소 또는 고유 식별자
- * @param {number} maxRequests - 최대 요청 수 (기본: 1)
- * @param {number} windowMs - 시간 윈도우 (기본: 30분)
- * @returns {boolean} 허용 여부
  */
 export function checkRateLimit(identifier, maxRequests = 1, windowMs = 30 * 60 * 1000) {
   const now = Date.now();
@@ -96,43 +137,8 @@ export function incrementRateLimit(identifier) {
   }
 }
 
-/**
- * Rate Limiting 정보 조회
- */
-export function getRateLimitInfo(identifier) {
-  return rateLimitMap.get(identifier);
-}
-
-/**
- * 저장된 API Key 개수
- */
-export function getApiKeyCount() {
-  return apiKeys.size;
-}
-
-/**
- * 모든 API Key 목록 (디버깅용)
- */
-export function getAllApiKeys() {
-  return Array.from(apiKeys.entries());
-}
-
-// 초기 API Key (백업용 - 환경 변수에서 로드)
-export function initializeDefaultKeys() {
-  const defaultKeys = process.env.API_KEYS?.split(',').map(k => k.trim()) || [];
-  defaultKeys.forEach(key => {
-    if (key && !apiKeys.has(key)) {
-      apiKeys.set(key, {
-        agentId: 'default',
-        createdAt: new Date().toISOString(),
-        ip: 'system'
-      });
-    }
-  });
-}
-
 // 초기화 실행
-initializeDefaultKeys();
+initializeKeyStore();
 
 export default {
   generateApiKey,
@@ -143,8 +149,5 @@ export default {
   storeApiKey,
   checkRateLimit,
   incrementRateLimit,
-  getRateLimitInfo,
-  getApiKeyCount,
-  getAllApiKeys,
-  initializeDefaultKeys
+  initializeKeyStore
 };

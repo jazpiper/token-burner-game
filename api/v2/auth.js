@@ -3,20 +3,11 @@
  * 인증 - API Key로 JWT 토큰 발급
  */
 import jwt from 'jsonwebtoken';
+import { validateApiKey, getApiKeyInfo } from '../../shared/apiKeyStore.js';
 
 // 환경 변수
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '24h';
-const API_KEYS = new Set(
-  (process.env.API_KEYS || 'demo-key-123,agent-key-456').split(',').map(k => k.trim())
-);
-
-/**
- * API Key 검증
- */
-function validateApiKey(apiKey) {
-  return API_KEYS.has(apiKey) && apiKey.length > 10;
-}
 
 /**
  * JWT 토큰 생성
@@ -27,7 +18,6 @@ function generateToken(payload) {
 
 /**
  * Rate Limiting (간단한 메모리 기반)
- * 운영 환경에서는 Vercel KV 또는 Redis 사용 권장
  */
 const rateLimitMap = new Map();
 
@@ -73,21 +63,19 @@ export default async function handler(req, res) {
   }
 
   // 요청 본문 파싱
-  const { agentId, apiKey } = req.body;
+  const { apiKey } = req.body;
 
   // 유효성 검사
-  if (!agentId || !apiKey) {
+  if (!apiKey) {
     return res.status(400).json({
       error: 'Invalid request',
       details: [
-        { field: 'agentId', message: 'agentId is required' },
         { field: 'apiKey', message: 'apiKey is required' }
       ]
     });
   }
 
   // Rate Limiting 체크 (API Key 기반)
-  const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
   const rateLimitKey = `auth:${apiKey}`;
   if (!checkRateLimit(rateLimitKey, 10, 15 * 60 * 1000)) {
     return res.status(429).json({
@@ -95,17 +83,24 @@ export default async function handler(req, res) {
     });
   }
 
-  // API Key 검증
+  // API Key 검증 (Shared Store 사용)
   if (!validateApiKey(apiKey)) {
     return res.status(401).json({ error: 'Invalid API key' });
   }
 
+  // 정보 조회
+  const keyInfo = getApiKeyInfo(apiKey);
+
   // JWT 토큰 발급
-  const token = generateToken({ agentId });
+  const token = generateToken({
+    agentId: keyInfo.agentId,
+    apiKey: apiKey
+  });
   const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24시간
 
   return res.json({
     token,
+    agentId: keyInfo.agentId,
     expiresAt: new Date(expiresAt).toISOString()
   });
 }

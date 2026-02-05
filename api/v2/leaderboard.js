@@ -61,10 +61,11 @@ export default async function handler(req, res) {
 
   try {
     // 경로 파싱
-    const pathParts = req.url.split('/').filter(Boolean);
+    const pathname = req.url.split('?')[0];
+    const pathParts = pathname.split('/').filter(Boolean);
 
     // GET /api/v2/leaderboard
-    if (pathParts[2] === 'leaderboard') {
+    if (pathParts.length === 3 && pathParts[2] === 'leaderboard') {
       // Rate Limiting 체크
       const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
       if (!checkRateLimit(`leaderboard:${ip}`, 100, 60 * 1000)) {
@@ -74,31 +75,21 @@ export default async function handler(req, res) {
       }
 
       // Query parameters
-      const type = req.query.type;
-      const difficulty = req.query.difficulty;
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 100;
+      const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;
+      const type = urlParams.get('type');
+      const difficulty = urlParams.get('difficulty');
+      const page = parseInt(urlParams.get('page')) || 1;
+      const limit = parseInt(urlParams.get('limit')) || 100;
 
       // 필터 생성
       const filters = {};
       if (type) filters.type = type;
       if (difficulty) filters.difficulty = difficulty;
 
-      // 리더보드 조회
-      const leaderboardData = getLeaderboard(filters);
+      // 리더보드 조회 (Async 호출)
+      const leaderboardData = await getLeaderboard(filters, page, limit);
 
-      // 페이징
-      const total = leaderboardData.length;
-      const offset = (page - 1) * limit;
-      const paginated = leaderboardData.slice(offset, offset + limit);
-
-      return res.json({
-        leaderboard: paginated,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit)
-      });
+      return res.json(leaderboardData);
     }
 
     // GET /api/v2/leaderboard/rank/:agentId
@@ -114,16 +105,17 @@ export default async function handler(req, res) {
       }
 
       // Query parameters
-      const type = req.query.type;
-      const difficulty = req.query.difficulty;
+      const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;
+      const type = urlParams.get('type');
+      const difficulty = urlParams.get('difficulty');
 
       // 필터 생성
       const filters = {};
       if (type) filters.type = type;
       if (difficulty) filters.difficulty = difficulty;
 
-      // 에이전트 순위 조회
-      const rankData = getAgentRank(agentId, filters);
+      // 에이전트 순위 조회 (Async 호출)
+      const rankData = await getAgentRank(agentId, filters);
 
       return res.json(rankData);
     }

@@ -1,8 +1,7 @@
 // Challenge Service
 // Manages challenges and their metadata
 
-import { readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import db from './db.js';
 
 // Initial challenges data
 const INITIAL_CHALLENGES = [
@@ -224,31 +223,66 @@ const INITIAL_CHALLENGES = [
   }
 ];
 
-// In-memory storage (can be replaced with DB)
+// In-memory storage (cache)
 let challenges = new Map();
 let challengeTopScores = new Map();
+let isInitialized = false;
+let initPromise = null;
 
-// Initialize challenges
-function initializeChallenges() {
-  INITIAL_CHALLENGES.forEach(c => {
-    challenges.set(c.challengeId, { ...c });
-    challengeTopScores.set(c.challengeId, 0);
-  });
+/**
+ * Ensure challenges are initialized
+ */
+async function ensureInitialized() {
+  if (isInitialized) return;
+  if (initPromise) return initPromise;
 
-  // Try to load from file
-  try {
-    const dataPath = join(process.cwd(), 'data', 'challenges.json');
-    const savedData = JSON.parse(readFileSync(dataPath, 'utf8'));
-    savedData.forEach(c => {
-      challenges.set(c.challengeId, c);
-    });
-  } catch (e) {
-    // File doesn't exist, use initial challenges
-  }
+  initPromise = (async () => {
+    try {
+      const res = await db.query('SELECT * FROM challenges');
+      if (res.rows.length > 0) {
+        res.rows.forEach(row => {
+          const challenge = {
+            challengeId: row.challenge_id,
+            title: row.title,
+            description: row.description,
+            type: row.type,
+            difficulty: row.difficulty,
+            expectedTokens: {
+              min: row.expected_tokens_min,
+              max: row.expected_tokens_max
+            },
+            timesCompleted: row.times_completed,
+            avgTokensPerAttempt: row.avg_tokens_per_attempt,
+            createdAt: row.created_at
+          };
+          challenges.set(challenge.challengeId, challenge);
+        });
+      } else {
+        // Seed initial challenges
+        for (const c of INITIAL_CHALLENGES) {
+          await db.query(
+            'INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING',
+            [c.challengeId, c.title, c.description, c.type, c.difficulty, c.expectedTokens.min, c.expectedTokens.max]
+          );
+          challenges.set(c.challengeId, { ...c });
+        }
+      }
+      isInitialized = true;
+    } catch (e) {
+      console.error('Failed to load challenges from DB, using defaults:', e.message);
+      INITIAL_CHALLENGES.forEach(c => challenges.set(c.challengeId, { ...c }));
+      isInitialized = true;
+    } finally {
+      initPromise = null;
+    }
+  })();
+
+  return initPromise;
 }
 
 // Get random challenge
-function getRandomChallenge(filters = {}) {
+async function getRandomChallenge(filters = {}) {
+  await ensureInitialized();
   const allChallenges = Array.from(challenges.values());
   let filteredChallenges = allChallenges;
 
@@ -268,13 +302,15 @@ function getRandomChallenge(filters = {}) {
 }
 
 // Get challenge by ID
-function getChallengeById(challengeId) {
+async function getChallengeById(challengeId) {
+  await ensureInitialized();
   const challenge = challenges.get(challengeId);
   return challenge ? { ...challenge } : null;
 }
 
 // Get all challenges
-function getAllChallenges(filters = {}, page = 1, limit = 20) {
+async function getAllChallenges(filters = {}, page = 1, limit = 20) {
+  await ensureInitialized();
   let result = Array.from(challenges.values());
 
   if (filters.difficulty) {
@@ -298,7 +334,8 @@ function getAllChallenges(filters = {}, page = 1, limit = 20) {
 }
 
 // Update challenge stats after submission
-function updateChallengeStats(challengeId, tokensUsed, score) {
+async function updateChallengeStats(challengeId, tokensUsed, score) {
+  await ensureInitialized();
   const challenge = challenges.get(challengeId);
   if (!challenge) return;
 
@@ -315,25 +352,26 @@ function updateChallengeStats(challengeId, tokensUsed, score) {
   }
 
   challenges.set(challengeId, challenge);
-}
 
-// Get top score for challenge
-function getChallengeTopScore(challengeId) {
-  return challengeTopScores.get(challengeId) || 0;
-}
-
-// Save challenges to file
-function saveChallenges() {
+  // Update DB
   try {
-    const dataPath = join(process.cwd(), 'data', 'challenges.json');
-    writeFileSync(dataPath, JSON.stringify(Array.from(challenges.values()), null, 2));
+    await db.query(
+      'UPDATE challenges SET times_completed = $1, avg_tokens_per_attempt = $2, updated_at = CURRENT_TIMESTAMP WHERE challenge_id = $3',
+      [challenge.timesCompleted, Math.floor(challenge.avgTokensPerAttempt), challengeId]
+    );
   } catch (e) {
-    console.error('Failed to save challenges:', e);
+    console.error('Failed to update challenge stats in DB:', e.message);
   }
 }
 
+// Get top score for challenge
+async function getChallengeTopScore(challengeId) {
+  await ensureInitialized();
+  return challengeTopScores.get(challengeId) || 0;
+}
+
 // Initialize
-initializeChallenges();
+ensureInitialized();
 
 export {
   getRandomChallenge,
@@ -341,6 +379,5 @@ export {
   getAllChallenges,
   updateChallengeStats,
   getChallengeTopScore,
-  saveChallenges,
   INITIAL_CHALLENGES
 };

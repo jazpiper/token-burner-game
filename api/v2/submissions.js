@@ -93,7 +93,7 @@ export async function handler(req, res) {
     }
 
     // 챌린지 존재 확인
-    const challenge = getChallengeById(challengeId);
+    const challenge = await getChallengeById(challengeId);
     if (!challenge) {
       return res.status(404).json({
         error: 'Not Found',
@@ -134,7 +134,7 @@ export async function handler(req, res) {
     );
 
     // 제출 생성
-    const submission = createSubmission({
+    const submission = await createSubmission({
       agentId,
       challengeId,
       tokensUsed,
