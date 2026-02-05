@@ -1,56 +1,85 @@
-/**
- * Rate Limiting 미들웨어
- * AI Agent 남용 방지
- */
-import rateLimit from 'express-rate-limit';
+// Rate Limiting Middleware
+// Simple in-memory rate limiter
 
-// 환경 변수 또는 기본 설정
-const WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'); // 1분
-const MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'); // 1분당 100회
+const requestCounts = new Map();
+const windowMs = 60 * 1000; // 1 minute window
 
-/**
- * 일반 Rate Limiting
- */
-export const generalRateLimit = rateLimit({
-  windowMs: WINDOW_MS,
-  max: MAX_REQUESTS,
-  message: {
-    error: 'Too many requests, please try again later'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    // API Key 또는 IP를 기반으로 제한
-    return req.headers['x-api-key'] || req.ip;
+function getClientIdentifier(req) {
+  // Use agent ID if authenticated, otherwise IP
+  if (req.agentId) {
+    return `agent:${req.agentId}`;
   }
-});
 
-/**
- * 엄격한 Rate Limiting (액션 수행용)
- */
-export const strictRateLimit = rateLimit({
-  windowMs: WINDOW_MS,
-  max: MAX_REQUESTS / 2, // 일반 제한의 절반
-  message: {
-    error: 'Too many actions, please slow down'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.headers['x-api-key'] || req.ip;
+  // Try to get IP from various headers
+  const ip = req.headers['x-forwarded-for'] ||
+             req.headers['x-real-ip'] ||
+             req.connection.remoteAddress ||
+             req.socket.remoteAddress ||
+             req.ip ||
+             'unknown';
+
+  return `ip:${ip}`;
+}
+
+function rateLimit(options = {}) {
+  const maxRequests = options.maxRequests || 60;
+  const customWindowMs = options.windowMs || windowMs;
+
+  return (req, res, next) => {
+    const clientId = getClientIdentifier(req);
+    const now = Date.now();
+
+    if (!requestCounts.has(clientId)) {
+      requestCounts.set(clientId, {
+        count: 0,
+        resetTime: now + customWindowMs
+      });
+    }
+
+    const clientData = requestCounts.get(clientId);
+
+    // Reset if window expired
+    if (now > clientData.resetTime) {
+      clientData.count = 0;
+      clientData.resetTime = now + customWindowMs;
+    }
+
+    // Check limit
+    if (clientData.count >= maxRequests) {
+      const resetAfter = Math.ceil((clientData.resetTime - now) / 1000);
+
+      return res.status(429).json({
+        error: 'Too Many Requests',
+        message: `Rate limit exceeded. Try again in ${resetAfter} seconds.`,
+        retryAfter: resetAfter
+      });
+    }
+
+    // Increment count
+    clientData.count++;
+    requestCounts.set(clientId, clientData);
+
+    // Add rate limit headers
+    res.setHeader('X-RateLimit-Limit', maxRequests);
+    res.setHeader('X-RateLimit-Remaining', maxRequests - clientData.count);
+    res.setHeader('X-RateLimit-Reset', new Date(clientData.resetTime).toISOString());
+
+    next();
+  };
+}
+
+// Clean up old entries periodically
+function cleanupOldEntries() {
+  const now = Date.now();
+
+  for (const [clientId, data] of requestCounts.entries()) {
+    if (now > data.resetTime) {
+      requestCounts.delete(clientId);
+    }
   }
-});
+}
 
-/**
- * 인증 Rate Limiting (로그인 시도)
- */
-export const authRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15분
-  max: 10, // 15분당 10회
-  message: {
-    error: 'Too many authentication attempts, please try again later'
-  },
-  skipSuccessfulRequests: true
-});
+// Run cleanup every 5 minutes
+setInterval(cleanupOldEntries, 5 * 60 * 1000);
 
-export default { generalRateLimit, strictRateLimit, authRateLimit };
+export { rateLimit, getClientIdentifier };

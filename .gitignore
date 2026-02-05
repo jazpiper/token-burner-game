@@ -1,33 +1,35 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Data files
+data/challenges.json
+data/
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# OS files
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
 
-# Report files (moved to /home/ubuntu/molt-report/)
-API.md
-API_INTEGRATION_REPORT.md
-DEPLOYMENT.md
-FINAL_REPORT_TO_JUHWAN.md
-IMPLEMENTATION_REPORT.md
-OPTIMIZATION_REPORT.md
-SUMMARY.md
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build
+dist/
+build/

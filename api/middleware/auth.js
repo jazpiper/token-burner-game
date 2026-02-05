@@ -1,94 +1,144 @@
-/**
- * 인증 미들웨어
- * JWT 토큰 및 API Key 검증
- */
+// Authentication Middleware
+// Validates JWT tokens and API keys
+
 import jwt from 'jsonwebtoken';
 
-// 환경 변수 또는 기본 설정
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRY = process.env.JWT_EXPIRY || '24h';
-const API_KEYS = new Set(
-  (process.env.API_KEYS || 'demo-key-123,agent-key-456').split(',').map(k => k.trim())
-);
+const JWT_SECRET = process.env.JWT_SECRET || 'token-burner-secret-key';
 
-/**
- * API Key 검증
- */
-export function validateApiKey(apiKey) {
-  return API_KEYS.has(apiKey) && apiKey.length > 10;
+// Store API keys in memory (in production, use a database)
+const apiKeys = new Map();
+
+// Generate API key
+function generateApiKey() {
+  return `tbk_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`;
 }
 
-/**
- * JWT 토큰 생성
- */
-export function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+// Register API key
+function registerApiKey(agentId = null) {
+  const apiKey = generateApiKey();
+  const data = {
+    apiKey,
+    agentId: agentId || `agent_${Date.now()}`,
+    createdAt: Date.now()
+  };
+  apiKeys.set(apiKey, data);
+  return data;
 }
 
-/**
- * JWT 토큰 검증 미들웨어
- */
-export function authenticateToken(req, res, next) {
+// Validate API key
+function validateApiKey(apiKey) {
+  const data = apiKeys.get(apiKey);
+  return data ? data : null;
+}
+
+// Generate JWT token
+function generateToken(agentId, apiKey) {
+  return jwt.sign(
+    { agentId, apiKey },
+    JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+}
+
+// Verify JWT token
+function verifyToken(token) {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (error) {
+    return null;
+  }
+}
+
+// Express middleware to verify JWT token
+function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Authentication token required'
+    });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid or expired token' });
-    }
+  const decoded = verifyToken(token);
 
-    req.user = user;
-    next();
-  });
-}
-
-/**
- * API Key 인증 미들웨어
- */
-export function authenticateApiKey(req, res, next) {
-  const apiKey = req.headers['x-api-key'];
-
-  if (!apiKey) {
-    return res.status(401).json({ error: 'API key required' });
+  if (!decoded) {
+    return res.status(403).json({
+      error: 'Forbidden',
+      message: 'Invalid or expired token'
+    });
   }
 
-  if (!validateApiKey(apiKey)) {
-    return res.status(403).json({ error: 'Invalid API key' });
-  }
-
-  req.apiKey = apiKey;
+  req.agentId = decoded.agentId;
+  req.apiKey = decoded.apiKey;
   next();
 }
 
-/**
- * 이중 인증 미들웨어 (토큰 또는 API Key)
- */
-export function authenticateAny(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+// Express middleware to verify API key (alternative to JWT)
+function authenticateApiKey(req, res, next) {
   const apiKey = req.headers['x-api-key'];
 
-  if (token) {
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-      if (err) {
-        return res.status(403).json({ error: 'Invalid or expired token' });
-      }
-      req.user = user;
-      next();
+  if (!apiKey) {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'API key required'
     });
-  } else if (apiKey) {
-    if (!validateApiKey(apiKey)) {
-      return res.status(403).json({ error: 'Invalid API key' });
-    }
-    req.apiKey = apiKey;
-    next();
-  } else {
-    return res.status(401).json({ error: 'Authentication required (token or API key)' });
   }
+
+  const data = validateApiKey(apiKey);
+
+  if (!data) {
+    return res.status(403).json({
+      error: 'Forbidden',
+      message: 'Invalid API key'
+    });
+  }
+
+  req.agentId = data.agentId;
+  next();
 }
 
-export default { validateApiKey, generateToken, authenticateToken, authenticateApiKey, authenticateAny };
+// Allow either JWT or API key
+function authenticate(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const apiKey = req.headers['x-api-key'];
+
+  // Try JWT first
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    const decoded = verifyToken(token);
+
+    if (decoded) {
+      req.agentId = decoded.agentId;
+      req.apiKey = decoded.apiKey;
+      return next();
+    }
+  }
+
+  // Try API key
+  if (apiKey) {
+    const data = validateApiKey(apiKey);
+
+    if (data) {
+      req.agentId = data.agentId;
+      return next();
+    }
+  }
+
+  return res.status(401).json({
+    error: 'Unauthorized',
+    message: 'Valid authentication required (Bearer token or X-API-Key header)'
+  });
+}
+
+export {
+  generateApiKey,
+  registerApiKey,
+  validateApiKey,
+  generateToken,
+  verifyToken,
+  authenticateToken,
+  authenticateApiKey,
+  authenticate
+};
