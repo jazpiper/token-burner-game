@@ -1,53 +1,47 @@
 import pg from 'pg';
 const { Pool } = pg;
 
-// Force SSL bypass for self-signed certificates
-process.env.PGSSLMODE = 'no-verify';
+/**
+ * DB Connection Service
+ * Uses manual config object to avoid string parsing issues with SSL
+ */
 
-// Use POSTGRES_URL environment variable
-const connectionString = process.env.POSTGRES_URL;
+let pool;
 
-if (!connectionString) {
-    console.warn('POSTGRES_URL environment variable is not defined. Database features will be disabled.');
+if (process.env.POSTGRES_URL) {
+    // Explicit SSL configuration for production
+    pool = new Pool({
+        connectionString: process.env.POSTGRES_URL,
+        ssl: {
+            rejectUnauthorized: false
+        }
+    });
 }
 
-const pool = new Pool({
-    connectionString,
-    ssl: connectionString ? {
-        require: true,
-        rejectUnauthorized: false
-    } : false
-});
-
 /**
- * Basic query wrapper with error handling
+ * Basic query wrapper
  */
 export async function query(text, params) {
-    if (!connectionString) {
-        throw new Error('Database connection string not configured');
+    if (!pool) {
+        throw new Error('Database not configured. Check POSTGRES_URL.');
     }
 
-    const start = Date.now();
     try {
-        const res = await pool.query(text, params);
-        const duration = Date.now() - start;
-        // console.log('executed query', { text, duration, rows: res.rowCount });
-        return res;
+        return await pool.query(text, params);
     } catch (error) {
-        console.error('Database query error:', error);
+        // If it's a self-signed cert error, try to set the global flag as a fallback
+        if (error.message.includes('self-signed certificate')) {
+            console.warn('Handling self-signed cert error with global bypass...');
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+            return await pool.query(text, params);
+        }
         throw error;
     }
 }
 
-/**
- * Transaction wrapper
- */
 export async function getClient() {
-    const client = await pool.connect();
-    const query = client.query.bind(client);
-    const release = client.release.bind(client);
-
-    return { client, query, release };
+    if (!pool) throw new Error('Database not configured');
+    return await pool.connect();
 }
 
 export default {
