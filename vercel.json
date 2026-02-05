@@ -6,23 +6,6 @@
       "use": "@vercel/node"
     }
   ],
-  "routes": [
-    {
-      "src": "/api/v2/(.*)",
-      "dest": "/api/v2/$1"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/dist/assets/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/dist/$1"
-    }
-  ],
   "rewrites": [
     {
       "source": "/(.*)",
