@@ -7,6 +7,9 @@ export default defineConfig({
 
   // 빌드 최적화
   build: {
+    // 빌드 출력 폴더 (Vercel 공개 디렉토리)
+    outDir: 'public',
+
     // Code splitting 및 청크 최적화
     rollupOptions: {
       output: {
