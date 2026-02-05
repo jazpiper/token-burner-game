@@ -33,7 +33,3 @@ Thumbs.db
 # Build
 dist/
 build/
-
-# Public assets (built from dist)
-/public/assets/
-/public/index.html
