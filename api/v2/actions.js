@@ -2,9 +2,7 @@
  * POST /api/v2/games/:id/actions - 액션 수행
  */
 import { gameLogic } from '../../shared/gameLogic.js';
-
-const games = new Map();
-const leaderboard = [];
+import { getGameById, addGameAction } from '../../services/gameService.js';
 
 function setCORSHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
@@ -45,7 +43,8 @@ export default async function handler(req, res) {
       });
     }
 
-    const game = games.get(gameId);
+    // PostgreSQL에서 게임 가져오기 (메모리 Map 제거)
+    const game = await getGameById(gameId);
     if (!game) {
       return res.status(404).json({ error: 'Game not found' });
     }
@@ -54,9 +53,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Game is not playing', status: game.status });
     }
 
+    // 게임 로직 실행
     const gameResult = gameLogic.executeAction(game, method);
 
-    games.set(gameId, game);
+    // PostgreSQL에 액션 저장 (메모리 Map 제거)
+    await addGameAction(gameId, {
+      method,
+      tokensBurned: gameResult.tokensBurned,
+      complexityWeight: gameResult.complexityWeight,
+      inefficiencyScore: gameResult.inefficiencyScore,
+      textPreview: gameResult.textPreview
+    });
 
     return res.json(gameResult);
   }
