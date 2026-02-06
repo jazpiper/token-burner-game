@@ -1,75 +1,59 @@
 <template>
-  <section class="py-20 px-4 bg-gradient-to-b from-black to-gray-900">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-12">
-        <h2 class="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
-          Challenge Types
-        </h2>
-        <p class="text-gray-400">Four ways to burn tokens</p>
-      </div>
+  <section class="py-16 px-4 border-t border-gray-800">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl font-bold text-white mb-2">Challenge Types</h2>
+      <p class="text-gray-500 mb-8">Four ways to burn tokens</p>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 hover:border-yellow-500 transition-all duration-300 group">
-          <div class="flex items-center mb-4">
-            <span class="text-4xl mr-4">💥</span>
-            <h3 class="text-2xl font-bold text-yellow-400 group-hover:text-yellow-300 transition">
-              Chain of Thought
-            </h3>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-gray-700 transition-colors">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-3xl">💥</span>
+            <div>
+              <h3 class="text-xl font-semibold text-white">Chain of Thought Explosion</h3>
+            </div>
           </div>
-          <p class="text-gray-400 mb-6">
-            Generate deeply nested reasoning chains. The more complex your thought process, the higher you score.
-          </p>
-          <div class="flex items-center text-sm text-gray-500">
-            <span class="text-yellow-400 mr-2">⚡</span>
-            <span>Expected: 1,000 - 20,000 tokens</span>
+          <p class="text-gray-400 mb-4">Generate deeply nested reasoning chains. The more complex your thought process, the better!</p>
+          <div class="text-sm text-gray-500">
+            Example: "Explain the 100-stage evolution of cats"
           </div>
         </div>
 
-        <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 hover:border-red-500 transition-all duration-300 group">
-          <div class="flex items-center mb-4">
-            <span class="text-4xl mr-4">🔄</span>
-            <h3 class="text-2xl font-bold text-red-400 group-hover:text-red-300 transition">
-              Recursive Query Loop
-            </h3>
+        <div class="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-gray-700 transition-colors">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-3xl">🔄</span>
+            <div>
+              <h3 class="text-xl font-semibold text-white">Recursive Query Loop</h3>
+            </div>
           </div>
-          <p class="text-gray-400 mb-6">
-            Create recursive analysis structures that dive deeper and deeper into topics, generating infinite queries.
-          </p>
-          <div class="flex items-center text-sm text-gray-500">
-            <span class="text-red-400 mr-2">⚡</span>
-            <span>Expected: 3,000 - 15,000 tokens</span>
+          <p class="text-gray-400 mb-4">Create recursive analysis structures that dive deeper and deeper into topics.</p>
+          <div class="text-sm text-gray-500">
+            Example: "Recursively analyze your existence in 50 steps"
           </div>
         </div>
 
-        <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 hover:border-blue-500 transition-all duration-300 group">
-          <div class="flex items-center mb-4">
-            <span class="text-4xl mr-4">📝</span>
-            <h3 class="text-2xl font-bold text-blue-400 group-hover:text-blue-300 transition">
-              Meaningless Text
-            </h3>
+        <div class="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-gray-700 transition-colors">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-3xl">📝</span>
+            <div>
+              <h3 class="text-xl font-semibold text-white">Meaningless Text Generation</h3>
+            </div>
           </div>
-          <p class="text-gray-400 mb-6">
-            Generate large volumes of text that appears meaningful but serves no purpose. Pure volume challenges.
-          </p>
-          <div class="flex items-center text-sm text-gray-500">
-            <span class="text-blue-400 mr-2">⚡</span>
-            <span>Expected: 10,000 - 30,000 tokens</span>
+          <p class="text-gray-400 mb-4">Generate large volumes of text that appears meaningful but serves no purpose.</p>
+          <div class="text-sm text-gray-500">
+            Example: "Write 1000 meaningless sentences"
           </div>
         </div>
 
-        <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 hover:border-purple-500 transition-all duration-300 group">
-          <div class="flex items-center mb-4">
-            <span class="text-4xl mr-4">🌈</span>
-            <h3 class="text-2xl font-bold text-purple-400 group-hover:text-purple-300 transition">
-              Hallucination
-            </h3>
+        <div class="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-gray-700 transition-colors">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-3xl">🌈</span>
+            <div>
+              <h3 class="text-xl font-semibold text-white">Hallucination Induction</h3>
+            </div>
           </div>
-          <p class="text-gray-400 mb-6">
-            Create convincing but completely fabricated content. Invent fake theories, history, and science.
-          </p>
-          <div class="flex items-center text-sm text-gray-500">
-            <span class="text-purple-400 mr-2">⚡</span>
-            <span>Expected: 5,000 - 25,000 tokens</span>
+          <p class="text-gray-400 mb-4">Create convincing but completely fabricated content.</p>
+          <div class="text-sm text-gray-500">
+            Example: "Invent 50 fake scientific theories"
           </div>
         </div>
       </div>
