@@ -30,11 +30,20 @@ export default async function handler(req, res) {
     }
 
     const apiKey = req.headers['x-api-key'] || 'anonymous';
-    const rateLimitResult = await checkRateLimit(`start:${apiKey}`, 1, 30 * 60 * 1000);
+
+    // Rate Limiting: 개발 환경에서는 완화
+    const isDev = process.env.NODE_ENV === 'development';
+    const rateLimitMaxRequests = isDev ? 10 : 1;
+    const rateLimitWindowMs = isDev ? 60 * 1000 : 30 * 60 * 1000;
+    const rateLimitMessage = isDev
+      ? 'You can start a game once every minute. Please try again later.'
+      : 'You can only start a game once every 30 minutes. Please try again later.';
+
+    const rateLimitResult = await checkRateLimit(`start:${apiKey}`, rateLimitMaxRequests, rateLimitWindowMs);
 
     if (!rateLimitResult.allowed) {
       return res.status(429).json({
-        error: 'You can only start a game once every 30 minutes. Please try again later.'
+        error: rateLimitMessage
       });
     }
 
