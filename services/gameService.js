@@ -3,11 +3,12 @@ import db from './db.js';
 async function createGame(data) {
   const { gameId, agentId, duration } = data;
 
+  const endsAt = new Date(Date.now() + duration * 1000);
   const res = await db.query(
     `INSERT INTO games (game_id, agent_id, status, tokens_burned, complexity_weight, inefficiency_score, score, duration, ends_at)
-     VALUES ($1, $2, 'playing', 0, 1, 0, 0, $3, CURRENT_TIMESTAMP + INTERVAL '1 second' * $3)
+     VALUES ($1, $2, 'playing', 0, 1, 0, 0, $3, $4)
      RETURNING *`,
-    [gameId, agentId, duration]
+    [gameId, agentId, duration, endsAt]
   );
 
   const row = res.rows[0];
