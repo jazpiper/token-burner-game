@@ -75,7 +75,7 @@ export class GameLogic {
    * 게임 ID 생성
    */
   generateGameId() {
-    return `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `game_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
@@ -219,10 +219,10 @@ export class GameLogic {
    */
   calculateScore(gameState) {
     const { TOKENS, COMPLEXITY, INEFFICIENCY } = GAME_CONFIG.SCORE_WEIGHTS;
-    return Math.floor(
+    const score =
       (gameState.tokensBurned * TOKENS * gameState.complexityWeight * COMPLEXITY) +
-      (gameState.inefficiencyScore * INEFFICIENCY)
-    );
+      (gameState.inefficiencyScore * INEFFICIENCY);
+    return Math.floor(score);
   }
 
   /**

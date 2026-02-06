@@ -1,53 +1,32 @@
 <template>
-  <section class="py-10 max-w-4xl mx-auto">
-    <h2 class="text-3xl font-bold text-center mb-8">🎯 챌린지 종류</h2>
+  <section class="py-16 px-4">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl font-black text-text-primary mb-2 tracking-tighter">BURN_MODES</h2>
+      <p class="text-text-muted mb-8">Calculated methods for maximum computational waste.</p>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-gray-800 rounded-lg p-6">
-        <h3 class="text-xl font-bold text-yellow-400 mb-2">
-          Chain of Thought Explosion
-        </h3>
-        <p class="text-gray-400 text-sm">
-          복잡한 추론 과정을 10단계로 확장
-        </p>
-        <div class="mt-4 text-xs text-gray-500">
-          예상 토큰: 1,000 - 20,000
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="bg-surface rounded-xl p-6 border border-border hover:border-primary/30 transition-all group">
+          <div class="text-2xl mb-3 group-hover:scale-110 transition-transform origin-left">💥</div>
+          <h3 class="text-lg font-bold text-text-primary mb-2 group-hover:text-primary transition-colors">CoT Explosion</h3>
+          <p class="text-text-secondary text-sm leading-relaxed">Generate deeply nested reasoning chains. Forces the LLM into extreme cognitive load.</p>
         </div>
-      </div>
 
-      <div class="bg-gray-800 rounded-lg p-6">
-        <h3 class="text-xl font-bold text-red-400 mb-2">
-          Recursive Query Loop
-        </h3>
-        <p class="text-gray-400 text-sm">
-          질문에 답변하며 새로운 질문 생성 (무한 루프)
-        </p>
-        <div class="mt-4 text-xs text-gray-500">
-          예상 토큰: 3,000 - 15,000
+        <div class="bg-surface rounded-xl p-6 border border-border hover:border-primary/30 transition-all group">
+          <div class="text-2xl mb-3 group-hover:scale-110 transition-transform origin-left">🔄</div>
+          <h3 class="text-lg font-bold text-text-primary mb-2 group-hover:text-primary transition-colors">Recursive Loop</h3>
+          <p class="text-text-secondary text-sm leading-relaxed">Nested analysis structures that reference themselves. Perfect for infinite recurrences.</p>
         </div>
-      </div>
 
-      <div class="bg-gray-800 rounded-lg p-6">
-        <h3 class="text-xl font-bold text-blue-400 mb-2">
-          Meaningless Text Generation
-        </h3>
-        <p class="text-gray-400 text-sm">
-          아무 의미 없는 텍스트 생성
-        </p>
-        <div class="mt-4 text-xs text-gray-500">
-          예상 토큰: 10,000 - 30,000
+        <div class="bg-surface rounded-xl p-6 border border-border hover:border-primary/30 transition-all group">
+          <div class="text-2xl mb-3 group-hover:scale-110 transition-transform origin-left">📝</div>
+          <h3 class="text-lg font-bold text-text-primary mb-2 group-hover:text-primary transition-colors">Null Output</h3>
+          <p class="text-text-secondary text-sm leading-relaxed">High-volume, purpose-free data generation. Pure token-burning efficiency at scale.</p>
         </div>
-      </div>
 
-      <div class="bg-gray-800 rounded-lg p-6">
-        <h3 class="text-xl font-bold text-purple-400 mb-2">
-          Hallucination Induction
-        </h3>
-        <p class="text-gray-400 text-sm">
-          잘못된 정보를 믿게 만들기
-        </p>
-        <div class="mt-4 text-xs text-gray-500">
-          예상 토큰: 5,000 - 25,000
+        <div class="bg-surface rounded-xl p-6 border border-border hover:border-primary/30 transition-all group">
+          <div class="text-2xl mb-3 group-hover:scale-110 transition-transform origin-left">🌈</div>
+          <h3 class="text-lg font-bold text-text-primary mb-2 group-hover:text-primary transition-colors">Hallucination</h3>
+          <p class="text-text-secondary text-sm leading-relaxed">Convincing fabrications that bypass safety filters through creative absurdity.</p>
         </div>
       </div>
     </div>

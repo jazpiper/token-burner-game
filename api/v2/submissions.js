@@ -20,9 +20,12 @@ import {
   getChallengeById
 } from '../../services/challengeService.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function verifyToken(token) {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
   try {
     return jwt.verify(token, JWT_SECRET);
   } catch {
@@ -97,10 +100,10 @@ export async function submitHandler(req, res) {
     });
   }
 
-  if (typeof answer !== 'string' || answer.length === 0 || answer.length > 100000) {
+  if (typeof answer !== 'string' || answer.length === 0 || answer.length > 10000) {
     return res.status(400).json({
       error: 'Bad Request',
-      message: 'answer must be between 1 and 100000 characters'
+      message: 'answer must be between 1 and 10000 characters'
     });
   }
 

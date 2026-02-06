@@ -6,11 +6,11 @@ import crypto from 'crypto';
 import db from '../services/db.js';
 
 export function generateApiKey() {
-  return `jzp-${crypto.randomUUID().replace(/-/g, '').substring(0, 8)}-${Date.now().toString(36)}`;
+  return `jzp-${crypto.randomUUID().replace(/-/g, '').slice(0, 8)}-${Date.now().toString(36)}`;
 }
 
 export function generateAgentId() {
-  return `agent-${crypto.randomUUID().replace(/-/g, '').substring(0, 8)}`;
+  return `agent-${crypto.randomUUID().replace(/-/g, '').slice(0, 8)}`;
 }
 
 export function hashApiKey(apiKey) {

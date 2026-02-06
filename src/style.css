@@ -1,37 +1,36 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@source "./**/*.vue";
+@source "./**/*.js";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@theme {
+  --color-background: #1a1a1b;
+  --color-surface: #272729;
+  --color-primary: #e01b24;
+  --color-accent: #00d4aa;
+  --color-border: #444446;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #ccc;
+  --color-text-muted: #888;
 }
 
+/* Base styles must come AFTER @import in PostCSS */
+:root {
+  --background: #1a1a1b;
+  --text-primary: #ffffff;
+}
+
+html,
 body {
+  background-color: #1a1a1b !important;
+  color: white !important;
   margin: 0;
-  display: flex;
-  min-width: 320px;
+  padding: 0;
   min-height: 100vh;
 }
 
 #app {
   width: 100%;
   min-height: 100vh;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
+  background-color: #1a1a1b;
 }

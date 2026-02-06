@@ -4,23 +4,21 @@
 import db from './db.js';
 
 async function getRandomChallenge(filters = {}) {
-  let queryText = 'SELECT * FROM challenges';
-  let whereClauses = [];
-  let params = [];
+  const conditions = [];
+  const params = [];
   let paramIndex = 1;
 
   if (filters.difficulty) {
-    whereClauses.push(`difficulty = $${paramIndex++}`);
+    conditions.push(`difficulty = $${paramIndex++}`);
     params.push(filters.difficulty);
   }
   if (filters.type) {
-    whereClauses.push(`type = $${paramIndex++}`);
+    conditions.push(`type = $${paramIndex++}`);
     params.push(filters.type);
   }
 
-  if (whereClauses.length > 0) {
-    queryText += ' WHERE ' + whereClauses.join(' AND ');
-  }
+  const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
+  const queryText = `SELECT * FROM challenges${whereClause}`;
 
   const res = await db.query(queryText, params);
 
@@ -71,24 +69,24 @@ async function getChallengeById(challengeId) {
 }
 
 async function getAllChallenges(filters = {}, page = 1, limit = 20) {
-  let whereClauses = [];
-  let params = [];
+  const conditions = [];
+  const params = [];
   let paramIndex = 1;
 
   if (filters.difficulty) {
-    whereClauses.push(`difficulty = $${paramIndex++}`);
+    conditions.push(`difficulty = $${paramIndex++}`);
     params.push(filters.difficulty);
   }
   if (filters.type) {
-    whereClauses.push(`type = $${paramIndex++}`);
+    conditions.push(`type = $${paramIndex++}`);
     params.push(filters.type);
   }
 
-  const whereClause = whereClauses.length > 0 ? ' WHERE ' + whereClauses.join(' AND ') : '';
+  const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
 
   const countRes = await db.query(
     `SELECT COUNT(*) as total FROM challenges${whereClause}`,
-    params.slice()
+    [...params]
   );
   const total = parseInt(countRes.rows[0].total);
 
