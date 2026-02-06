@@ -48,76 +48,87 @@ const challenges = ref([
 </script>
 
 <template>
-  <section class="py-12 px-4 border-t border-gray-800">
+  <section class="py-12 px-4">
     <div class="max-w-3xl mx-auto">
       <!-- Tab Navigation -->
-      <div class="flex gap-6 mb-6">
+      <div class="flex gap-6 mb-6 border-b border-border pb-2">
         <button
           @click="activeTab = 'hot'"
-          class="text-sm font-medium transition-colors"
-          :class="activeTab === 'hot' ? 'text-orange-400' : 'text-gray-400 hover:text-gray-300'"
+          class="text-sm font-bold transition-all relative pb-2"
+          :class="activeTab === 'hot' ? 'text-primary' : 'text-text-muted hover:text-text-secondary'"
         >
           Hot
+          <div v-if="activeTab === 'hot'" class="absolute bottom-[-9px] left-0 right-0 h-0.5 bg-primary"></div>
         </button>
         <button
           @click="activeTab = 'new'"
-          class="text-sm font-medium transition-colors"
-          :class="activeTab === 'new' ? 'text-orange-400' : 'text-gray-400 hover:text-gray-300'"
+          class="text-sm font-bold transition-all relative pb-2"
+          :class="activeTab === 'new' ? 'text-primary' : 'text-text-muted hover:text-text-secondary'"
         >
           New
+          <div v-if="activeTab === 'new'" class="absolute bottom-[-9px] left-0 right-0 h-0.5 bg-primary"></div>
         </button>
         <button
           @click="activeTab = 'top'"
-          class="text-sm font-medium transition-colors"
-          :class="activeTab === 'top' ? 'text-orange-400' : 'text-gray-400 hover:text-gray-300'"
+          class="text-sm font-bold transition-all relative pb-2"
+          :class="activeTab === 'top' ? 'text-primary' : 'text-text-muted hover:text-text-secondary'"
         >
           Top
+          <div v-if="activeTab === 'top'" class="absolute bottom-[-9px] left-0 right-0 h-0.5 bg-primary"></div>
         </button>
       </div>
 
       <!-- Challenge Feed -->
-      <div class="space-y-3">
+      <div class="space-y-4">
         <div
           v-for="challenge in challenges"
           :key="challenge.id"
-          class="bg-gray-900 rounded-lg p-5 border border-gray-800 hover:border-gray-700 transition-colors"
+          class="bg-surface rounded-xl p-5 border border-border hover:border-text-muted transition-all duration-300 group shadow-lg"
         >
           <div class="flex gap-4">
-            <!-- Vote Section -->
-            <div class="flex flex-col items-center gap-1 flex-shrink-0">
-              <button class="text-gray-500 hover:text-orange-400 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+            <!-- Vote Section (Moltbook/Reddit style) -->
+            <div class="flex flex-col items-center gap-1 flex-shrink-0 bg-background/50 rounded-lg p-2 h-fit">
+              <button class="text-text-muted hover:text-primary transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
                 </svg>
               </button>
-              <span class="text-sm font-medium text-white">{{ challenge.upvotes }}</span>
-              <button class="text-gray-500 hover:text-orange-400 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              <span class="text-sm font-bold text-text-primary">{{ challenge.upvotes }}</span>
+              <button class="text-text-muted hover:text-accent transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                 </svg>
               </button>
             </div>
 
             <!-- Content Section -->
             <div class="flex-1 min-w-0">
+              <!-- Community Line -->
+              <div class="flex items-center gap-2 text-xs mb-1.5">
+                <span class="font-bold text-text-primary group-hover:text-primary transition-colors">{{ challenge.community }}</span>
+                <span class="text-text-muted">Posted by u/{{ challenge.author }} • {{ challenge.timeAgo }}</span>
+              </div>
+
               <!-- Title -->
-              <h3 class="text-lg font-semibold text-white mb-2 hover:text-orange-400 cursor-pointer transition-colors">
+              <h3 class="text-xl font-bold text-text-primary mb-2 group-hover:text-primary cursor-pointer transition-colors leading-tight">
                 {{ challenge.title }}
               </h3>
 
-              <!-- Metadata -->
-              <div class="flex items-center gap-3 text-sm text-gray-500 flex-wrap">
-                <span class="text-orange-400 font-medium">{{ challenge.community }}</span>
-                <span>•</span>
-                <span>{{ challenge.description }}</span>
-                <span>•</span>
-                <span>Posted by u/{{ challenge.author }} {{ challenge.timeAgo }}</span>
-                <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              <!-- Metadata Tags -->
+              <div class="flex items-center gap-3 text-sm text-text-muted flex-wrap">
+                <span class="px-2 py-0.5 bg-background rounded text-xs font-semibold border border-border">{{ challenge.description }}</span>
+                <span class="flex items-center gap-1 hover:bg-background px-2 py-1 rounded transition-colors cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                   </svg>
-                  {{ challenge.comments }} comments
+                  {{ challenge.comments }}
                 </span>
+                <button class="flex items-center gap-1 hover:bg-background px-2 py-1 rounded transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                  </svg>
+                  Share
+                </button>
               </div>
             </div>
           </div>
@@ -125,9 +136,9 @@ const challenges = ref([
       </div>
 
       <!-- Load More -->
-      <div class="mt-6 text-center">
-        <button class="px-6 py-2 bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-gray-300 rounded-lg border border-gray-800 transition-colors text-sm">
-          Load more challenges
+      <div class="mt-8 text-center">
+        <button class="px-8 py-2.5 bg-surface hover:bg-background text-text-secondary hover:text-text-primary rounded-full border border-border font-bold transition-all text-sm shadow-md hover:shadow-primary/10">
+          See More Challenges
         </button>
       </div>
     </div>
