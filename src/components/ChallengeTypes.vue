@@ -1,53 +1,76 @@
 <template>
-  <section class="py-10 max-w-4xl mx-auto">
-    <h2 class="text-3xl font-bold text-center mb-8">🎯 챌린지 종류</h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-gray-800 rounded-lg p-6">
-        <h3 class="text-xl font-bold text-yellow-400 mb-2">
-          Chain of Thought Explosion
-        </h3>
-        <p class="text-gray-400 text-sm">
-          복잡한 추론 과정을 10단계로 확장
-        </p>
-        <div class="mt-4 text-xs text-gray-500">
-          예상 토큰: 1,000 - 20,000
-        </div>
+  <section class="py-20 px-4 bg-gradient-to-b from-black to-gray-900">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
+          Challenge Types
+        </h2>
+        <p class="text-gray-400">Four ways to burn tokens</p>
       </div>
 
-      <div class="bg-gray-800 rounded-lg p-6">
-        <h3 class="text-xl font-bold text-red-400 mb-2">
-          Recursive Query Loop
-        </h3>
-        <p class="text-gray-400 text-sm">
-          질문에 답변하며 새로운 질문 생성 (무한 루프)
-        </p>
-        <div class="mt-4 text-xs text-gray-500">
-          예상 토큰: 3,000 - 15,000
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 hover:border-yellow-500 transition-all duration-300 group">
+          <div class="flex items-center mb-4">
+            <span class="text-4xl mr-4">💥</span>
+            <h3 class="text-2xl font-bold text-yellow-400 group-hover:text-yellow-300 transition">
+              Chain of Thought
+            </h3>
+          </div>
+          <p class="text-gray-400 mb-6">
+            Generate deeply nested reasoning chains. The more complex your thought process, the higher you score.
+          </p>
+          <div class="flex items-center text-sm text-gray-500">
+            <span class="text-yellow-400 mr-2">⚡</span>
+            <span>Expected: 1,000 - 20,000 tokens</span>
+          </div>
         </div>
-      </div>
 
-      <div class="bg-gray-800 rounded-lg p-6">
-        <h3 class="text-xl font-bold text-blue-400 mb-2">
-          Meaningless Text Generation
-        </h3>
-        <p class="text-gray-400 text-sm">
-          아무 의미 없는 텍스트 생성
-        </p>
-        <div class="mt-4 text-xs text-gray-500">
-          예상 토큰: 10,000 - 30,000
+        <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 hover:border-red-500 transition-all duration-300 group">
+          <div class="flex items-center mb-4">
+            <span class="text-4xl mr-4">🔄</span>
+            <h3 class="text-2xl font-bold text-red-400 group-hover:text-red-300 transition">
+              Recursive Query Loop
+            </h3>
+          </div>
+          <p class="text-gray-400 mb-6">
+            Create recursive analysis structures that dive deeper and deeper into topics, generating infinite queries.
+          </p>
+          <div class="flex items-center text-sm text-gray-500">
+            <span class="text-red-400 mr-2">⚡</span>
+            <span>Expected: 3,000 - 15,000 tokens</span>
+          </div>
         </div>
-      </div>
 
-      <div class="bg-gray-800 rounded-lg p-6">
-        <h3 class="text-xl font-bold text-purple-400 mb-2">
-          Hallucination Induction
-        </h3>
-        <p class="text-gray-400 text-sm">
-          잘못된 정보를 믿게 만들기
-        </p>
-        <div class="mt-4 text-xs text-gray-500">
-          예상 토큰: 5,000 - 25,000
+        <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 hover:border-blue-500 transition-all duration-300 group">
+          <div class="flex items-center mb-4">
+            <span class="text-4xl mr-4">📝</span>
+            <h3 class="text-2xl font-bold text-blue-400 group-hover:text-blue-300 transition">
+              Meaningless Text
+            </h3>
+          </div>
+          <p class="text-gray-400 mb-6">
+            Generate large volumes of text that appears meaningful but serves no purpose. Pure volume challenges.
+          </p>
+          <div class="flex items-center text-sm text-gray-500">
+            <span class="text-blue-400 mr-2">⚡</span>
+            <span>Expected: 10,000 - 30,000 tokens</span>
+          </div>
+        </div>
+
+        <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 hover:border-purple-500 transition-all duration-300 group">
+          <div class="flex items-center mb-4">
+            <span class="text-4xl mr-4">🌈</span>
+            <h3 class="text-2xl font-bold text-purple-400 group-hover:text-purple-300 transition">
+              Hallucination
+            </h3>
+          </div>
+          <p class="text-gray-400 mb-6">
+            Create convincing but completely fabricated content. Invent fake theories, history, and science.
+          </p>
+          <div class="flex items-center text-sm text-gray-500">
+            <span class="text-purple-400 mr-2">⚡</span>
+            <span>Expected: 5,000 - 25,000 tokens</span>
+          </div>
         </div>
       </div>
     </div>

@@ -5,7 +5,7 @@ import { updateChallengeStats } from './challengeService.js';
 import db from './db.js';
 
 function generateSubmissionId() {
-  return `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `sub_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
 
 async function createSubmission(data) {

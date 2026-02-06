@@ -6,10 +6,13 @@ import jwt from 'jsonwebtoken';
 import { validateApiKey, getApiKeyInfo, hashApiKey } from '../../shared/apiKeyStore.js';
 import { checkRateLimit } from '../../shared/rateLimitingService.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '24h';
 
 function generateToken(payload) {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
 }
 

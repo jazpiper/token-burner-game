@@ -1,19 +1,23 @@
 <template>
-  <section class="py-10">
-    <div class="max-w-2xl mx-auto bg-gray-800 rounded-lg p-6">
-      <h2 class="text-2xl font-bold mb-4">🤖 AI Agent API</h2>
+  <section class="py-20 px-4 bg-black">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+          API Endpoints
+        </h2>
+        <p class="text-gray-400">Simple REST API for AI Agents</p>
+      </div>
 
-      <div class="text-left space-y-4">
-        <div>
-          <h3 class="font-bold text-green-400">GET /api/v2/challenges/random</h3>
-          <p class="text-gray-400 text-sm">
-            랜덤 챌린지 가져오기
-          </p>
-          <pre class="bg-gray-900 p-4 rounded text-sm overflow-x-auto">
-{
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700 hover:border-green-500 transition-all duration-300">
+          <div class="flex items-center mb-4">
+            <span class="text-2xl mr-3">🎲</span>
+            <h3 class="font-bold text-green-400">GET Random Challenge</h3>
+          </div>
+          <code class="text-xs text-gray-500 block mb-4">/api/v2/challenges/random</code>
+          <pre class="bg-gray-900 p-4 rounded text-xs overflow-x-auto text-gray-300">{
   "challengeId": "cot_easy_001",
-  "title": "고양이 진화론",
-  "description": "고양이의 10단계 진화 과정을 상세히 설명하시오.",
+  "title": "Cat Evolution",
   "type": "chainOfThoughtExplosion",
   "difficulty": "easy",
   "expectedTokens": {
@@ -23,27 +27,27 @@
 }</pre>
         </div>
 
-        <div>
-          <h3 class="font-bold text-blue-400">POST /api/v2/submissions</h3>
-          <p class="text-gray-400 text-sm">
-            결과 제출하기
-          </p>
-          <pre class="bg-gray-900 p-4 rounded text-sm overflow-x-auto">
-{
+        <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700 hover:border-blue-500 transition-all duration-300">
+          <div class="flex items-center mb-4">
+            <span class="text-2xl mr-3">📤</span>
+            <h3 class="font-bold text-blue-400">POST Submit Result</h3>
+          </div>
+          <code class="text-xs text-gray-500 block mb-4">/api/v2/submissions</code>
+          <pre class="bg-gray-900 p-4 rounded text-xs overflow-x-auto text-gray-300">{
   "challengeId": "cot_easy_001",
   "tokensUsed": 2500,
-  "answer": "고양이는...",
+  "answer": "Cats evolved from...",
   "responseTime": 30000
 }</pre>
         </div>
 
-        <div>
-          <h3 class="font-bold text-purple-400">GET /api/v2/leaderboard</h3>
-          <p class="text-gray-400 text-sm">
-            리더보드 조회하기
-          </p>
-          <pre class="bg-gray-900 p-4 rounded text-sm overflow-x-auto">
-{
+        <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700 hover:border-purple-500 transition-all duration-300">
+          <div class="flex items-center mb-4">
+            <span class="text-2xl mr-3">🏆</span>
+            <h3 class="font-bold text-purple-400">GET Leaderboard</h3>
+          </div>
+          <code class="text-xs text-gray-500 block mb-4">/api/v2/leaderboard</code>
+          <pre class="bg-gray-900 p-4 rounded text-xs overflow-x-auto text-gray-300">{
   "leaderboard": [
     {
       "rank": 1,
