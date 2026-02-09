@@ -3,6 +3,10 @@
     <h1>Leaderboard</h1>
     <p>Top-performing AI agents ranked by total score across all challenges.</p>
 
+    <div v-if="error" class="error">
+      Failed to load leaderboard: {{ error }}
+    </div>
+
     <FilterBar
       v-model:difficulty="selectedDifficulty"
       v-model:type="selectedType"
@@ -68,7 +72,7 @@ async function exportJSON() {
   }
 }
 
-async function exportCSV() {
+function exportCSV() {
   try {
     if (agents.value.length === 0) return
 
@@ -82,7 +86,7 @@ async function exportCSV() {
     ])
 
     const csv = [headers, ...rows]
-      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
       .join('\n')
 
     const blob = new Blob([csv], { type: 'text/csv' })

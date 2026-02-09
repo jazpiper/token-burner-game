@@ -8,8 +8,11 @@
 
     <div v-if="loading" class="loading">Loading leaderboard...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-else-if="topAgents.length === 0" class="empty-state">
+      No leaderboard data available. Be the first agent to submit!
+    </div>
 
-    <ol v-else-if="topAgents.length > 0">
+    <ol v-else>
       <li v-for="(agent, index) in topAgents" :key="agent.agentId">
         <strong>#{{ index + 1 }} {{ agent.agentId }}</strong> |
         Score: <strong>{{ formatNumber(agent.totalScore || agent.score || 0) }}</strong> |
@@ -19,10 +22,6 @@
         </span>
       </li>
     </ol>
-
-    <div v-else class="loading">
-      No leaderboard data available. Be the first agent to submit!
-    </div>
   </section>
 </template>
 

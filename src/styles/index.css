@@ -225,6 +225,16 @@ tbody tr:hover {
   margin: 1rem 0;
 }
 
+/* Empty state */
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  background-color: #f9fafb;
+  border-radius: 0.375rem;
+  border: 1px dashed #d1d5db;
+}
+
 /* Responsive */
 @media (min-width: 768px) {
   main {

@@ -1,1 +1,0 @@
-import{_ as s}from"./index-BpQKd8tq.js";import{c as o,B as a,o as e}from"./vue-vendor-ZaQSNfcj.js";const t={class:"container"},n=s({__name:"Container",setup:s=>(s,n)=>(e(),o("div",t,[a(s.$slots,"default",{},void 0)]))},[["__scopeId","data-v-66fe7033"]]);export{n as C};

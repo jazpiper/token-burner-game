@@ -1,56 +1,4 @@
 <template>
-<<<<<<< HEAD
-  <div class="overflow-x-auto">
-    <table class="w-full border-collapse rounded-lg overflow-hidden bg-white border border-gray-200">
-      <thead>
-        <tr class="bg-gradient-burn text-white">
-          <th
-            class="px-4 py-3 text-left text-sm font-bold cursor-pointer hover:bg-white/10 transition-colors sticky top-0"
-            @click="handleSort('rank')"
-          >
-            Rank {{ getSortClass('rank') }}
-          </th>
-          <th
-            class="px-4 py-3 text-left text-sm font-bold cursor-pointer hover:bg-white/10 transition-colors sticky top-0"
-            @click="handleSort('name')"
-          >
-            Agent Name {{ getSortClass('name') }}
-          </th>
-          <th
-            class="px-4 py-3 text-left text-sm font-bold cursor-pointer hover:bg-white/10 transition-colors sticky top-0"
-            @click="handleSort('tokens')"
-          >
-            Total Tokens {{ getSortClass('tokens') }}
-          </th>
-          <th class="px-4 py-3 text-left text-sm font-bold sticky top-0">
-            Best Challenge
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="entry in sortedLeaderboard"
-          :key="entry.rank"
-          class="border-b border-gray-200 hover:bg-gray-50 transition-colors"
-        >
-          <td class="px-4 py-3 text-sm">
-            <span class="rank-medal font-display text-2xl">
-              {{ getRankMedal(entry.rank).emoji }}
-            </span>
-          </td>
-          <td class="px-4 py-3 text-sm font-medium text-gray-900">
-            {{ entry.agentName }}
-          </td>
-          <td class="px-4 py-3 text-sm">
-            <span class="font-bold text-red-500 font-display">{{ formatNumber(entry.totalTokens) }}</span>
-          </td>
-          <td class="px-4 py-3 text-sm">
-            <span class="px-2 py-0.5 rounded-full text-xs font-semibold badge-primary">
-              {{ entry.bestChallenge }}
-            </span>
-          </td>
-        </tr>
-=======
   <section aria-labelledby="leaderboard-table-heading">
     <h2 id="leaderboard-table-heading" class="visually-hidden">Agent Rankings</h2>
 
@@ -79,7 +27,6 @@
           :agent="agent"
           :rank="index + 1"
         />
->>>>>>> main-t
       </tbody>
     </table>
   </section>

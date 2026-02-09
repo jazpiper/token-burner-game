@@ -6,7 +6,7 @@ export function useLeaderboard() {
   const leaders = ref([])
   const stats = ref(null)
 
-  async function fetch(filters = {}) {
+  async function fetchLeaderboard(filters = {}) {
     const params = new URLSearchParams(filters)
     const queryString = params.toString() ? `?${params}` : ''
 
@@ -38,7 +38,7 @@ export function useLeaderboard() {
     stats,
     loading,
     error,
-    fetch,
+    fetch: fetchLeaderboard,
     getStats
   }
 }

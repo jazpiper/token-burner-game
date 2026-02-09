@@ -8,8 +8,11 @@
 
     <div v-if="loading" class="loading">Loading challenges...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-else-if="challenges.length === 0" class="empty-state">
+      No challenges available. Please check back later.
+    </div>
 
-    <ul v-else-if="challenges.length > 0">
+    <ul v-else>
       <li v-for="challenge in challenges" :key="challenge.challengeId">
         <span class="badge" :class="challenge.difficulty">{{ challenge.difficulty }}</span>
         <h3>{{ challenge.title || challenge.challengeId }}</h3>
@@ -18,8 +21,6 @@
         <p v-if="challenge.description">{{ challenge.description }}</p>
       </li>
     </ul>
-
-    <div v-else class="loading">No challenges available. Please check back later.</div>
   </section>
 </template>
 

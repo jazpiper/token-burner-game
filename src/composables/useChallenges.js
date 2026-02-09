@@ -5,7 +5,7 @@ export function useChallenges() {
   const { fetch: apiFetch, loading, error } = useApi()
   const challenges = ref([])
 
-  async function fetch(filters = {}) {
+  async function fetchChallenges(filters = {}) {
     const params = new URLSearchParams(filters)
     const queryString = params.toString() ? `?${params}` : ''
 
@@ -41,7 +41,7 @@ export function useChallenges() {
     challenges,
     loading,
     error,
-    fetch,
+    fetch: fetchChallenges,
     getRandom,
     getById
   }

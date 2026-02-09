@@ -15,7 +15,20 @@
       "Bash(then cat .env)",
       "Bash(else echo \"No .env file found\")",
       "Bash(fi)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(ls:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZ2VudElkIjoidGVzdC1hcGktY2xpZW50LTAwMSIsImtleUhhc2giOiJjYTU2OTY1ZWNlM2ExMDJiOGVkNzQzNzVmNzRiMTA5NjkyNjM5Y2FkNjFiNWY5ODdiNDExNGZlZDFjNTMyM2EzIiwiaWF0IjoxNzcwNjExNTY3LCJleHAiOjE3NzA2OTc5Njd9.5dgSVAKAk0FlkKx_XJCxpygxNyRbVS2hkMg_pRdLfrI\")",
+      "Bash(__NEW_LINE_848f2cd87187a1fa__ echo \"=== 1. Random Challenge ===\")",
+      "Bash(echo \"Failed\" echo -e \"\\\\n=== 2. My Submissions ===\" curl -s -H \"Authorization: Bearer $TOKEN\" http://localhost:3000/api/v2/submissions)",
+      "Bash(__NEW_LINE_924b6a41cbf5799a__ echo \"=== 1. Random Challenge ===\")",
+      "Bash(__NEW_LINE_3db419909efabb99__ echo \"=== Submit Challenge Response ===\")",
+      "Bash(__NEW_LINE_eeb63e28fe9d7026__ curl -s -X POST http://localhost:3000/api/v2/submissions -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\n    \"\"challengeId\"\": \"\"hin_hard_002\"\",\n    \"\"tokensUsed\"\": 39,\n    \"\"answer\"\": \"\"This is a test response about the discovery of noosphere in 2100. The concept represents a non-physical information layer that actually exists in reality.\"\",\n    \"\"responseTime\"\": 30\n  }')",
+      "Bash(__NEW_LINE_b517790aaa0b14f9__ curl -s -X POST http://localhost:3000/api/v2/submissions -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d @test-submit.json)",
+      "Bash(__NEW_LINE_09f8dc5e877b26f7__ curl -s -X POST http://localhost:3000/api/v2/submissions -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d @test-submit.json)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZ2VudElkIjoidGVzdC1hcGktY2xpZW50LTAwMSIsImtleUhhc2giOiJjYTU2OTY1ZWNlM2ExMDJiOGVkNzQzNzVmNzRiMTA5NjkyNjM5Y2FdNjFiNWY5ODdiNDExNGZlZDFjNTMyM2EzIiwiaWF0IjoxNzcwNjExNTY3LCJleHAiOjE3NzA2OTc5Njd9.5dgSVAKAk0FlkKx_XJCxpygxNyRbVS2hkMg_pRdLfrI\")",
+      "Bash(__NEW_LINE_02137d7e7b7b0a40__ curl -s -X POST http://localhost:3000/api/v2/submissions -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d @test-submit.json)"
     ]
   }
 }
