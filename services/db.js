@@ -9,10 +9,10 @@ const { Pool } = pg;
 let pool;
 
 if (process.env.POSTGRES_URL) {
-    // SSL disabled for local development
+    // SSL configuration based on NODE_ENV
     pool = new Pool({
         connectionString: process.env.POSTGRES_URL,
-        ssl: false
+        ssl: process.env.NODE_ENV === 'production' ? true : false
     });
 }
 

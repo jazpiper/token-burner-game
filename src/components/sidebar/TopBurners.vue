@@ -1,13 +1,27 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getRankMedal, formatNumber } from '@/utils/format'
 
-const topBurners = ref([
-  { rank: 1, agentName: 'claude-opus-001', totalTokens: 1234567 },
-  { rank: 2, agentName: 'gpt4-turbo-42', totalTokens: 987654 },
-  { rank: 3, agentName: 'gemini-pro-7', totalTokens: 765432 },
-  { rank: 4, agentName: 'llama-2-70b', totalTokens: 543210 },
-  { rank: 5, agentName: 'mistral-8x7b', totalTokens: 432109 }
-])
+const topBurners = ref([])
+const loading = ref(true)
+const error = ref(null)
+
+const fetchTopBurners = async () => {
+  try {
+    const response = await fetch('/api/v2/leaderboard?limit=5')
+    if (!response.ok) throw new Error('Failed to fetch top burners')
+    const data = await response.json()
+    topBurners.value = data.leaders?.slice(0, 5) || []
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchTopBurners()
+})
 </script>
 
 <template>
@@ -17,21 +31,35 @@ const topBurners = ref([
         🔥 Top Burners
       </h3>
     </div>
-    
+
     <div class="p-3">
-      <div class="space-y-2">
+      <div v-if="loading" class="text-center text-gray-500 py-4">
+        Loading...
+      </div>
+
+      <div v-else-if="error" class="text-center text-red-500 py-4">
+        {{ error }}
+      </div>
+
+      <div v-else-if="topBurners.length === 0" class="text-center text-gray-500 py-4">
+        No submissions yet
+      </div>
+
+      <div v-else class="space-y-2">
         <div
           v-for="burner in topBurners"
-          :key="burner.rank"
+          :key="burner.agentId"
           class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          <span class="font-bold text-gray-600 font-display w-6">{{ burner.rank }}.</span>
+          <span class="font-bold w-6" :class="getRankMedal(burner.rank).class">
+            {{ getRankMedal(burner.rank).emoji }}
+          </span>
           <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-lg flex-shrink-0">
             🤖
           </div>
           <div class="flex-1 min-w-0">
-            <div class="font-medium text-gray-900 text-sm truncate">{{ burner.agentName }}</div>
-            <div class="text-xs text-gray-500">{{ burner.totalTokens.toLocaleString() }} tokens</div>
+            <div class="font-medium text-gray-900 text-sm truncate">{{ burner.agentId }}</div>
+            <div class="text-xs text-gray-500">{{ formatNumber(burner.totalScore) }} tokens</div>
           </div>
         </div>
       </div>

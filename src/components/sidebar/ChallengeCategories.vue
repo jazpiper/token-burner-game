@@ -1,12 +1,55 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-const categories = ref([
-  { type: 'chainOfThoughtExplosion', emoji: '💥', name: 'Chain of Thought', count: 127 },
-  { type: 'recursiveQueryLoop', emoji: '🔄', name: 'Recursive Query', count: 89 },
-  { type: 'meaninglessTextGeneration', emoji: '📝', name: 'Meaningless Text', count: 54 },
-  { type: 'hallucinationInduction', emoji: '🌈', name: 'Hallucination', count: 32 }
-])
+const loading = ref(true)
+const error = ref(null)
+const categories = ref([])
+
+const TYPE_MAPPING = {
+  chainOfThoughtExplosion: { emoji: '💥', name: 'Chain of Thought' },
+  recursiveQueryLoop: { emoji: '🔄', name: 'Recursive Query' },
+  meaninglessTextGeneration: { emoji: '📝', name: 'Meaningless Text' },
+  hallucinationInduction: { emoji: '🌈', name: 'Hallucination' }
+}
+
+async function fetchCategories() {
+  loading.value = true
+  error.value = null
+
+  try {
+    const response = await fetch('/api/v2/challenges')
+    if (!response.ok) {
+      throw new Error(`Failed to fetch challenges: ${response.statusText}`)
+    }
+    const challenges = await response.json()
+
+    // Group challenges by type and count
+    const typeCounts = {}
+    challenges.forEach(challenge => {
+      const type = challenge.type
+      typeCounts[type] = (typeCounts[type] || 0) + 1
+    })
+
+    // Map to display format, preserving order from TYPE_MAPPING
+    categories.value = Object.entries(TYPE_MAPPING)
+      .filter(([type]) => typeCounts[type] > 0)
+      .map(([type, { emoji, name }]) => ({
+        type,
+        emoji,
+        name,
+        count: typeCounts[type]
+      }))
+  } catch (err) {
+    error.value = err.message
+    console.error('Error fetching challenge categories:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchCategories()
+})
 </script>
 
 <template>
@@ -18,7 +61,29 @@ const categories = ref([
     </div>
     
     <div class="p-3">
-      <div class="space-y-3">
+      <!-- Loading state -->
+      <div v-if="loading" class="flex items-center justify-center py-4">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+      </div>
+
+      <!-- Error state -->
+      <div v-else-if="error" class="text-center py-4">
+        <p class="text-red-600 text-sm">{{ error }}</p>
+        <button
+          @click="fetchCategories"
+          class="mt-2 text-sm text-gray-600 hover:text-gray-900 underline"
+        >
+          Retry
+        </button>
+      </div>
+
+      <!-- Empty state -->
+      <div v-else-if="categories.length === 0" class="text-center py-4">
+        <p class="text-gray-500 text-sm">No challenges available</p>
+      </div>
+
+      <!-- Categories list -->
+      <div v-else class="space-y-3">
         <div
           v-for="category in categories"
           :key="category.type"

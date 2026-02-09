@@ -169,7 +169,7 @@ export class GameLogic {
   }
 
   /**
-   * 액션 실행
+   * 액션 실행 (pure function - does not mutate state)
    */
   executeAction(gameState, method) {
     let result;
@@ -193,23 +193,11 @@ export class GameLogic {
 
     const tokens = this.estimateTokens(result.text);
 
-    // 게임 상태 업데이트
-    gameState.tokensBurned += tokens;
-    gameState.complexityWeight += result.complexityWeight || 0;
-    gameState.inefficiencyScore += result.inefficiencyScore || 0;
-    gameState.score = this.calculateScore(gameState);
-
-    gameState.actions.push({
-      method,
-      tokens,
-      timestamp: Date.now()
-    });
-
+    // Return calculated values without mutating state
     return {
       tokensBurned: tokens,
       complexityWeight: result.complexityWeight || 0,
       inefficiencyScore: result.inefficiencyScore || 0,
-      score: gameState.score,
       text: result.text.substring(0, 500) // 텍스트 길이 제한
     };
   }
