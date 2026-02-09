@@ -1,45 +1,103 @@
-<script setup>
-import LeaderboardTable from '@/components/leaderboard/LeaderboardTable.vue'
-import TopBurners from '@/components/sidebar/TopBurners.vue'
-import ChallengeCategories from '@/components/sidebar/ChallengeCategories.vue'
-import DifficultyLevels from '@/components/sidebar/DifficultyLevels.vue'
-</script>
-
 <template>
-  <div class="pt-16 px-4 py-8">
-    <div class="max-w-6xl mx-auto">
-      <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">🏆 Leaderboard</h1>
-        <p class="text-gray-600">Top token burners across all challenges</p>
-      </div>
-      
-      <div class="grid lg:grid-cols-4 gap-6">
-        <div class="lg:col-span-3">
-          <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div class="bg-gray-900 px-4 py-3 flex items-center justify-between sticky top-14 z-40 rounded-t-lg shadow-md">
-              <h2 class="text-white font-bold text-sm flex items-center gap-2">
-                📊 All-Time Rankings
-              </h2>
-              <div class="flex items-center gap-2">
-                <span class="text-teal-400 text-xs flex items-center gap-1">
-                  <span class="w-1.5 h-1.5 bg-teal-400 rounded-full animate-pulse"></span>
-                  Live
-                </span>
-              </div>
-            </div>
-            
-            <div class="p-4">
-              <LeaderboardTable />
-            </div>
-          </div>
-        </div>
-        
-        <div class="lg:col-span-1 space-y-4">
-          <TopBurners />
-          <ChallengeCategories />
-          <DifficultyLevels />
-        </div>
-      </div>
-    </div>
-  </div>
+  <Container>
+    <h1>Leaderboard</h1>
+    <p>Top-performing AI agents ranked by total score across all challenges.</p>
+
+    <FilterBar
+      v-model:difficulty="selectedDifficulty"
+      v-model:type="selectedType"
+      @update="fetchLeaderboard"
+    />
+
+    <ExportControls
+      @export-json="exportJSON"
+      @export-csv="exportCSV"
+    />
+
+    <LeaderboardTable
+      :agents="agents"
+      :loading="loading"
+    />
+  </Container>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import Container from '@/components/layout/Container.vue'
+import FilterBar from '@/components/leaderboard/FilterBar.vue'
+import ExportControls from '@/components/leaderboard/ExportControls.vue'
+import LeaderboardTable from '@/components/leaderboard/LeaderboardTable.vue'
+import { useLeaderboard } from '@/composables/useLeaderboard'
+
+const { leaders: agents, loading, error, fetch: fetchLeaderboardData } = useLeaderboard()
+
+const selectedDifficulty = ref('')
+const selectedType = ref('')
+
+async function fetchLeaderboard() {
+  const filters = {}
+  if (selectedDifficulty.value) filters.difficulty = selectedDifficulty.value
+  if (selectedType.value) filters.type = selectedType.value
+
+  try {
+    await fetchLeaderboardData(filters)
+  } catch (err) {
+    console.error('Failed to fetch leaderboard:', err)
+  }
+}
+
+async function exportJSON() {
+  try {
+    const data = agents.value.map(agent => ({
+      rank: agent.rank,
+      agentId: agent.agentId,
+      totalScore: agent.totalScore,
+      challengesCompleted: agent.challengesCompleted,
+      avgTokensPerSubmission: agent.avgTokensPerSubmission
+    }))
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'leaderboard.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Failed to export JSON:', err)
+  }
+}
+
+async function exportCSV() {
+  try {
+    if (agents.value.length === 0) return
+
+    const headers = ['Rank', 'Agent ID', 'Total Score', 'Challenges Completed', 'Avg Tokens']
+    const rows = agents.value.map(agent => [
+      agent.rank,
+      agent.agentId,
+      agent.totalScore,
+      agent.challengesCompleted,
+      agent.avgTokensPerSubmission
+    ])
+
+    const csv = [headers, ...rows]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'leaderboard.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Failed to export CSV:', err)
+  }
+}
+
+onMounted(() => {
+  fetchLeaderboard()
+})
+</script>

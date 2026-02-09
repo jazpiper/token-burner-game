@@ -32,6 +32,72 @@ function detectRepetition(text) {
   return maxCount / uniqueWords;
 }
 
+function detectAdvancedRepetition(text) {
+  const flags = [];
+  const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
+
+  // 1. Consecutive word repetition
+  for (let i = 0; i < words.length - 1; i++) {
+    if (words[i] === words[i + 1]) {
+      flags.push({
+        type: 'consecutive_words',
+        severity: 'high',
+        example: words[i]
+      });
+      break; // Found one, that's enough
+    }
+  }
+
+  // 2. N-gram repetition (2-4 word phrases)
+  const nGrams = {};
+  for (let n = 2; n <= 4; n++) {
+    for (let i = 0; i < words.length - n + 1; i++) {
+      const gram = words.slice(i, i + n).join(' ');
+      nGrams[gram] = (nGrams[gram] || 0) + 1;
+    }
+  }
+
+  const repeatedGrams = Object.entries(nGrams)
+    .filter(([_, count]) => count >= 3)
+    .map(([gram, count]) => ({
+      type: 'phrase_repetition',
+      severity: count > 5 ? 'high' : 'medium',
+      phrase: gram,
+      count
+    }));
+
+  flags.push(...repeatedGrams);
+
+  // 3. Pattern repetition (ABABAB)
+  for (let patternLen = 2; patternLen <= 3; patternLen++) {
+    for (let i = 0; i < words.length - patternLen * 3; i++) {
+      const pattern1 = words.slice(i, i + patternLen).join(' ');
+      const pattern2 = words.slice(i + patternLen, i + patternLen * 2).join(' ');
+      const pattern3 = words.slice(i + patternLen * 2, i + patternLen * 3).join(' ');
+
+      if (pattern1 === pattern2 && pattern2 === pattern3) {
+        flags.push({
+          type: 'pattern_repetition',
+          severity: 'medium',
+          pattern: pattern1,
+          occurrences: 3
+        });
+        break;
+      }
+    }
+  }
+
+  // 4. Calculate overall score
+  const baseRepetition = detectRepetition(text);
+  const penalty = flags.length * 0.05;
+  const score = Math.min(1, baseRepetition + penalty);
+
+  return {
+    score,
+    flags: flags.slice(0, 10) // Limit to top 10 flags
+  };
+}
+
 function validateAnswerQuality(answer, tokensUsed) {
   const analysis = analyzeAnswer(answer);
   const repetition = detectRepetition(answer);
@@ -74,6 +140,28 @@ function validateAnswerQuality(answer, tokensUsed) {
     });
   }
 
+  // Advanced repetition detection
+  const advancedRep = detectAdvancedRepetition(answer);
+
+  // Check for high severity flags
+  const highSeverityFlags = advancedRep.flags.filter(f => f.severity === 'high');
+  if (highSeverityFlags.length > 0) {
+    issues.push({
+      type: 'warning',
+      code: 'significant_repetition_detected',
+      flags: highSeverityFlags
+    });
+  }
+
+  // Check overall score
+  if (advancedRep.score > 0.6) {
+    issues.push({
+      type: 'warning',
+      code: 'high_repetition_score',
+      score: advancedRep.score
+    });
+  }
+
   return {
     valid: !issues.some(i => i.type === 'error'),
     issues
@@ -83,5 +171,6 @@ function validateAnswerQuality(answer, tokensUsed) {
 export {
   analyzeAnswer,
   detectRepetition,
+  detectAdvancedRepetition,
   validateAnswerQuality
 };

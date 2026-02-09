@@ -1,7 +1,6 @@
 // Submission Service
 // Manages challenge submissions
 
-import { updateChallengeStats } from './challengeService.js';
 import db from './db.js';
 
 function generateSubmissionId() {
@@ -15,6 +14,7 @@ async function createSubmission(data) {
   try {
     await client.query('BEGIN');
 
+    // Insert submission
     await client.query(
       `INSERT INTO submissions
       (submission_id, agent_id, challenge_id, tokens_used, answer, response_time, score, validation_errors, validation_warnings, validated_at)
@@ -33,9 +33,31 @@ async function createSubmission(data) {
       ]
     );
 
-    await updateChallengeStats(data.challengeId, data.tokensUsed, data.score);
+    // Update challenge stats (inline, same transaction)
+    const challengeRes = await client.query(
+      'SELECT times_completed, avg_tokens_per_attempt FROM challenges WHERE challenge_id = $1 FOR UPDATE',
+      [data.challengeId]
+    );
+
+    if (challengeRes.rows.length > 0) {
+      const currentStats = challengeRes.rows[0];
+      const timesCompleted = currentStats.times_completed + 1;
+      const avgTokensPerAttempt = Math.floor(
+        (currentStats.avg_tokens_per_attempt * currentStats.times_completed + data.tokensUsed) / timesCompleted
+      );
+
+      await client.query(
+        'UPDATE challenges SET times_completed = $1, avg_tokens_per_attempt = $2, updated_at = CURRENT_TIMESTAMP WHERE challenge_id = $3',
+        [timesCompleted, avgTokensPerAttempt, data.challengeId]
+      );
+    }
 
     await client.query('COMMIT');
+
+    // Refresh leaderboard asynchronously (don't wait)
+    refreshLeaderboardAsync().catch(err => {
+      console.error('Failed to refresh leaderboard:', err.message);
+    });
 
     return {
       submissionId,
@@ -55,6 +77,16 @@ async function createSubmission(data) {
     throw e;
   } finally {
     client.release();
+  }
+}
+
+// Async leaderboard refresh (non-blocking)
+async function refreshLeaderboardAsync() {
+  try {
+    await db.query('REFRESH MATERIALIZED VIEW leaderboard_mv');
+  } catch (e) {
+    console.error('Leaderboard refresh failed:', e.message);
+    throw e;
   }
 }
 
@@ -151,35 +183,8 @@ async function getAgentSubmissions(agentId, filters = {}, page = 1, limit = 20) 
   }
 }
 
-async function getAllSubmissions() {
-  try {
-    const res = await db.query('SELECT * FROM submissions');
-    return res.rows.map(row => ({
-      agentId: row.agent_id,
-      challengeId: row.challenge_id,
-      tokensUsed: row.tokens_used,
-      score: row.score,
-      createdAt: row.created_at
-    }));
-  } catch (e) {
-    console.error('Failed to fetch all submissions from DB:', e.message);
-    return [];
-  }
-}
-
-async function getSubmissionCount(agentId) {
-  try {
-    const res = await db.query('SELECT COUNT(*) FROM submissions WHERE agent_id = $1', [agentId]);
-    return parseInt(res.rows[0].count);
-  } catch (e) {
-    return 0;
-  }
-}
-
 export {
   createSubmission,
   getSubmissionById,
-  getAgentSubmissions,
-  getAllSubmissions,
-  getSubmissionCount
+  getAgentSubmissions
 };

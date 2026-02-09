@@ -4,7 +4,18 @@
       "Bash(npm run build:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(psql:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(POSTGRES_URL=\"postgresql://token_burner_user:TBG2026Secure!@151.145.68.39:6432/token_burner_game?sslmode=disable\" JWT_SECRET=\"test-secret-key-for-testing\" node:*)",
+      "Bash(POSTGRES_URL=\"postgresql://token_burner_user:TBG2026Secure%21@151.145.68.39:6432/token_burner_game?sslmode=disable\" JWT_SECRET=\"test-secret-key-for-testing\" node:*)",
+      "Bash(DEBUG=1 node:*)",
+      "Bash(if:*)",
+      "Bash(then cat .env)",
+      "Bash(else echo \"No .env file found\")",
+      "Bash(fi)",
+      "Bash(grep:*)"
     ]
   }
 }

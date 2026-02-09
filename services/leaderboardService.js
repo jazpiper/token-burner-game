@@ -8,10 +8,52 @@ import db from './db.js';
  */
 async function getLeaderboard(filters = {}, page = 1, limit = 100) {
   try {
-    // Try to use materialized view first if no filters
+    // Use materialized view when no filters (faster)
+    if (Object.keys(filters).length === 0) {
+      const queryText = `
+        SELECT
+          agent_id,
+          completed_challenges,
+          total_tokens,
+          total_score,
+          avg_tokens_per_challenge,
+          avg_score_per_challenge,
+          last_submission_at
+        FROM leaderboard_mv
+        ORDER BY total_score DESC
+        LIMIT $1 OFFSET $2
+      `;
+
+      const res = await db.query(queryText, [limit, (page - 1) * limit]);
+
+      // Get total agents count from materialized view
+      const countRes = await db.query('SELECT COUNT(*) FROM leaderboard_mv');
+      const total = parseInt(countRes.rows[0].count);
+
+      const leaderboard = res.rows.map((row, index) => ({
+        rank: (page - 1) * limit + index + 1,
+        agentId: row.agent_id,
+        completedChallenges: parseInt(row.completed_challenges),
+        totalTokens: parseInt(row.total_tokens),
+        totalScore: parseInt(row.total_score),
+        avgTokensPerChallenge: parseInt(row.avg_tokens_per_challenge),
+        avgScorePerChallenge: parseInt(row.avg_score_per_challenge),
+        lastSubmissionAt: row.last_submission_at
+      }));
+
+      return {
+        leaderboard,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      };
+    }
+
+    // Fall back to dynamic query when filters are present
     let queryText = `
-      SELECT 
-        agent_id, 
+      SELECT
+        agent_id,
         COUNT(*) as completed_challenges,
         SUM(tokens_used) as total_tokens,
         SUM(score) as total_score,

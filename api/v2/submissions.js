@@ -16,6 +16,7 @@ import {
   validateSubmission,
   calculateScore
 } from '../../services/validationService.js';
+import { estimateTokens } from '../../services/languageDetector.js';
 import {
   getChallengeById
 } from '../../services/challengeService.js';
@@ -81,6 +82,12 @@ export async function submitHandler(req, res) {
 
   const { challengeId, tokensUsed, answer, responseTime } = req.body || {};
 
+  // Debug logging (can be removed in production)
+  if (process.env.DEBUG) {
+    console.log('Submission request body:', req.body);
+    console.log('Extracted challengeId:', challengeId);
+  }
+
   if (!challengeId || !tokensUsed || !answer) {
     return res.status(400).json({
       error: 'Bad Request',
@@ -131,9 +138,27 @@ export async function submitHandler(req, res) {
     });
   }
 
+  // Server-side token recalculation for security
+  const serverEstimatedTokens = estimateTokens(answer);
+  const tokenVariance = Math.abs(tokensUsed - serverEstimatedTokens) / tokensUsed;
+
+  // Reject submissions with 20%+ variance between client-reported and server-calculated tokens
+  if (tokenVariance > 0.2) {
+    return res.status(400).json({
+      error: 'Token Validation Failed',
+      message: 'Client-reported token count differs significantly from server estimation',
+      details: {
+        clientReported: tokensUsed,
+        serverEstimated: serverEstimatedTokens,
+        variance: tokenVariance
+      }
+    });
+  }
+
   const scoreResult = calculateScore(
     { tokensUsed, answer },
-    challenge
+    challenge,
+    serverEstimatedTokens // Use server-estimated tokens for score calculation
   );
 
   const submission = await createSubmission({
@@ -141,7 +166,7 @@ export async function submitHandler(req, res) {
     challengeId,
     tokensUsed,
     answer,
-    responseTime: responseTime || Date.now(),
+    responseTime: Math.floor((responseTime || Date.now()) / 1000), // Convert to seconds
     score: scoreResult.score,
     validation
   });

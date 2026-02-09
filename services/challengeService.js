@@ -154,19 +154,9 @@ async function updateChallengeStats(challengeId, tokensUsed, score) {
   }
 }
 
-// Get top score for challenge
-async function getChallengeTopScore(challengeId) {
-  const res = await db.query(
-    'SELECT MAX(score) as top_score FROM submissions WHERE challenge_id = $1',
-    [challengeId]
-  );
-  return res.rows[0]?.top_score || 0;
-}
-
 export {
   getRandomChallenge,
   getChallengeById,
   getAllChallenges,
-  updateChallengeStats,
-  getChallengeTopScore
+  updateChallengeStats
 };

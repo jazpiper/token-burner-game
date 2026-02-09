@@ -4,12 +4,10 @@
 import { detectLanguage, estimateTokens, LANGUAGE_TOKEN_RATIOS } from './languageDetector.js';
 import { analyzeAnswer, detectRepetition, validateAnswerQuality } from './answerAnalyzer.js';
 import { getAgentSubmissions } from './submissionService.js';
-import { getChallengeById } from './challengeService.js';
 
 // Validate submission
-async function validateSubmission(submission, challengeId) {
+async function validateSubmission(submission, challenge) {
   const validations = [];
-  const challenge = await getChallengeById(challengeId);
 
   if (!challenge) {
     return {
@@ -19,15 +17,48 @@ async function validateSubmission(submission, challengeId) {
     };
   }
 
-  // Stage 1: Range check
-  if (submission.tokensUsed < challenge.expectedTokens.min ||
-    submission.tokensUsed > challenge.expectedTokens.max * 2) {
+  // Stage 1: Token range validation
+  // 1. Absolute limits (must enforce)
+  const ABSOLUTE_MIN_TOKENS = 500;
+  const ABSOLUTE_MAX_TOKENS = 100000;
+
+  if (submission.tokensUsed < ABSOLUTE_MIN_TOKENS) {
     validations.push({
       stage: 1,
-      error: 'out_of_range',
+      error: 'below_absolute_minimum',
       tokensUsed: submission.tokensUsed,
-      min: challenge.expectedTokens.min,
-      max: challenge.expectedTokens.max * 2
+      minimum: ABSOLUTE_MIN_TOKENS
+    });
+  }
+
+  if (submission.tokensUsed > ABSOLUTE_MAX_TOKENS) {
+    validations.push({
+      stage: 1,
+      error: 'exceeds_absolute_maximum',
+      tokensUsed: submission.tokensUsed,
+      maximum: ABSOLUTE_MAX_TOKENS
+    });
+  }
+
+  // 2. Expected range (warning only, not error)
+  if (submission.tokensUsed < challenge.expectedTokens.min ||
+      submission.tokensUsed > challenge.expectedTokens.max * 2) {
+    validations.push({
+      stage: 1,
+      warning: 'out_of_expected_range',
+      tokensUsed: submission.tokensUsed,
+      expectedMin: challenge.expectedTokens.min,
+      expectedMax: challenge.expectedTokens.max * 2
+    });
+  }
+
+  // 3. Extreme deviation (error)
+  if (submission.tokensUsed > challenge.expectedTokens.max * 10) {
+    validations.push({
+      stage: 1,
+      error: 'excessive_token_count',
+      tokensUsed: submission.tokensUsed,
+      reasonableMax: challenge.expectedTokens.max * 10
     });
   }
 
@@ -39,10 +70,11 @@ async function validateSubmission(submission, challengeId) {
   if (estimatedTokens > 0) {
     const variance = Math.abs(submission.tokensUsed - estimatedTokens) / submission.tokensUsed;
 
-    if (variance > 0.5) {
+    // Changed from warning (0.5) to error (0.3) for stricter validation
+    if (variance > 0.3) {
       validations.push({
         stage: 2,
-        warning: 'unusual_token_count',
+        error: 'unusual_token_count',
         language,
         variance,
         estimatedTokens,
@@ -62,7 +94,7 @@ async function validateSubmission(submission, challengeId) {
   });
 
   // Stage 4: History-based validation
-  const agentHistory = await getAgentSubmissions(submission.agentId, { challengeId });
+  const agentHistory = await getAgentSubmissions(submission.agentId, { challengeId: submission.challengeId });
   const historySubmissions = agentHistory.submissions || [];
 
   if (historySubmissions.length > 0) {
@@ -72,10 +104,11 @@ async function validateSubmission(submission, challengeId) {
 
     const historyVariance = Math.abs(submission.tokensUsed - avgTokens) / avgTokens;
 
-    if (historyVariance > 2.0) {
+    // Changed from warning (2.0) to error (1.0) to prevent first submission bypass
+    if (historyVariance > 1.0) {
       validations.push({
         stage: 4,
-        warning: 'significant_deviation_from_average',
+        error: 'significant_deviation_from_average',
         avgTokens: Math.floor(avgTokens),
         historyVariance,
         historyCount: historySubmissions.length
@@ -92,12 +125,13 @@ async function validateSubmission(submission, challengeId) {
       estimatedTokens,
       analysis: analyzeAnswer(submission.answer),
       repetition: detectRepetition(submission.answer)
-    }
+    },
+    estimatedTokens // Return estimated tokens for score calculation
   };
 }
 
 // Calculate score
-function calculateScore(submission, challenge) {
+function calculateScore(submission, challenge, estimatedTokens) {
   const DIFFICULTY_MULTIPLIERS = {
     easy: 1.0,
     medium: 1.5,
@@ -106,7 +140,7 @@ function calculateScore(submission, challenge) {
   };
 
   const difficultyMultiplier = DIFFICULTY_MULTIPLIERS[challenge.difficulty] || 1.0;
-  const qualityMultiplier = 1.0;
+  let qualityMultiplier = 1.0;
 
   // Check for quality bonuses
   const analysis = analyzeAnswer(submission.answer);
@@ -122,8 +156,10 @@ function calculateScore(submission, challenge) {
     qualityMultiplier += 0.1;
   }
 
+  // Use server-estimated tokens instead of client-reported tokensUsed to prevent manipulation
+  const tokensForScore = estimatedTokens || submission.tokensUsed;
   const score = Math.floor(
-    submission.tokensUsed * difficultyMultiplier * qualityMultiplier
+    tokensForScore * difficultyMultiplier * qualityMultiplier
   );
 
   return {
@@ -131,7 +167,7 @@ function calculateScore(submission, challenge) {
     difficultyMultiplier,
     qualityMultiplier,
     breakdown: {
-      tokensUsed: submission.tokensUsed,
+      tokensUsed: tokensForScore,
       difficultyMultiplier,
       qualityMultiplier,
       finalScore: score
