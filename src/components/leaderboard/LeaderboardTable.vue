@@ -53,28 +53,28 @@ const getSortClass = (field) => {
 
 <template>
   <div class="overflow-x-auto">
-    <table class="w-full border-collapse rounded-lg overflow-hidden bg-white border border-gray-200 min-w-[600px]">
+    <table class="w-full border-collapse rounded-lg overflow-hidden bg-white border border-gray-200">
       <thead>
         <tr class="bg-gradient-burn text-white">
           <th
-            class="px-2 sm:px-4 py-3 text-left text-sm font-bold cursor-pointer hover:bg-white/10 transition-colors whitespace-nowrap"
+            class="px-4 py-3 text-left text-sm font-bold cursor-pointer hover:bg-white/10 transition-colors sticky top-0"
             @click="handleSort('rank')"
           >
             Rank {{ getSortClass('rank') }}
           </th>
           <th
-            class="px-2 sm:px-4 py-3 text-left text-sm font-bold cursor-pointer hover:bg-white/10 transition-colors whitespace-nowrap"
+            class="px-4 py-3 text-left text-sm font-bold cursor-pointer hover:bg-white/10 transition-colors sticky top-0"
             @click="handleSort('name')"
           >
-            Agent {{ getSortClass('name') }}
+            Agent Name {{ getSortClass('name') }}
           </th>
           <th
-            class="px-2 sm:px-4 py-3 text-left text-sm font-bold cursor-pointer hover:bg-white/10 transition-colors whitespace-nowrap"
+            class="px-4 py-3 text-left text-sm font-bold cursor-pointer hover:bg-white/10 transition-colors sticky top-0"
             @click="handleSort('tokens')"
           >
-            Tokens {{ getSortClass('tokens') }}
+            Total Tokens {{ getSortClass('tokens') }}
           </th>
-          <th class="px-2 sm:px-4 py-3 text-left text-sm font-bold whitespace-nowrap hidden sm:table-cell">
+          <th class="px-4 py-3 text-left text-sm font-bold sticky top-0">
             Best Challenge
           </th>
         </tr>
@@ -85,18 +85,18 @@ const getSortClass = (field) => {
           :key="entry.rank"
           class="border-b border-gray-200 hover:bg-gray-50 transition-colors"
         >
-          <td class="px-2 sm:px-4 py-3 text-sm whitespace-nowrap">
-            <span class="font-display text-xl sm:text-2xl">
+          <td class="px-4 py-3 text-sm">
+            <span class="rank-medal font-display text-2xl">
               {{ getRankMedal(entry.rank).emoji }}
             </span>
           </td>
-          <td class="px-2 sm:px-4 py-3 text-sm font-medium text-gray-900 max-w-[150px] truncate">
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">
             {{ entry.agentName }}
           </td>
-          <td class="px-2 sm:px-4 py-3 text-sm whitespace-nowrap">
+          <td class="px-4 py-3 text-sm">
             <span class="font-bold text-red-500 font-display">{{ formatNumber(entry.totalTokens) }}</span>
           </td>
-          <td class="px-2 sm:px-4 py-3 text-sm hidden sm:table-cell">
+          <td class="px-4 py-3 text-sm">
             <span class="px-2 py-0.5 rounded-full text-xs font-semibold badge-primary">
               {{ entry.bestChallenge }}
             </span>

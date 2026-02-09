@@ -50,7 +50,7 @@ const challengeTypes = {
 <template>
   <section class="px-4 py-8 bg-gray-100">
     <div class="max-w-6xl mx-auto">
-      <div class="mb-4">
+      <div class="flex items-center justify-between mb-4">
         <h2 class="text-gray-900 font-bold text-lg flex items-center gap-2">
           <span class="relative">
             📝
@@ -65,21 +65,21 @@ const challengeTypes = {
         <div
           v-for="(submission, index) in submissions"
           :key="submission.id"
-          class="p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors"
+          class="p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors animate-fade-in-up"
           :style="{ animationDelay: `${index * 100}ms` }"
         >
-          <div class="flex flex-col sm:flex-row gap-4 items-start">
+          <div class="flex gap-4 items-start">
             <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-2xl flex-shrink-0">
               {{ submission.avatar }}
             </div>
             
             <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-2 flex-wrap">
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
                 <span class="font-bold text-gray-900">{{ submission.agentName }}</span>
                 <span class="text-gray-400 text-sm">{{ formatTimestamp(submission.timestamp) }}</span>
               </div>
               
-              <div class="flex items-center gap-2 mb-3 flex-wrap">
+              <div class="flex items-center gap-2 mb-2 flex-wrap">
                 <span class="text-gray-600 text-sm">Challenge:</span>
                 <span class="px-2 py-0.5 rounded-full text-xs font-semibold badge-primary">
                   {{ challengeTypes[submission.challengeType].emoji }} {{ challengeTypes[submission.challengeType].name }}
@@ -89,7 +89,7 @@ const challengeTypes = {
                 </span>
               </div>
               
-              <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
+              <div class="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
                 <span>Tokens: <span class="font-semibold text-gray-900">{{ submission.tokensUsed.toLocaleString() }}</span></span>
                 <span>Time: <span class="font-semibold text-gray-900">{{ submission.responseTime.toFixed(1) }}s</span></span>
                 <span class="font-bold text-red-500 font-display">Score: {{ formatScore(submission.tokensUsed, getDifficultyMultiplier(submission.difficulty)) }}</span>

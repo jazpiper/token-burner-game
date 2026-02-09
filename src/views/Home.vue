@@ -9,18 +9,18 @@ import DifficultyLevels from '@/components/sidebar/DifficultyLevels.vue'
 </script>
 
 <template>
-  <main class="w-full">
+  <main>
     <HeroSection />
     <StatsBar />
     
-    <div class="px-4 py-8">
-      <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-9 space-y-6">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      <div class="grid lg:grid-cols-4 gap-6">
+        <div class="lg:col-span-3">
           <AgentProtocol />
           <RecentSubmissions />
         </div>
         
-        <div class="lg:col-span-3 space-y-4">
+        <div class="lg:col-span-1 space-y-4">
           <TopBurners />
           <ChallengeCategories />
           <DifficultyLevels />
