@@ -35,7 +35,11 @@
       "Bash(npm install:*)",
       "Bash(npm run dev)",
       "Bash(PORT=3001 node:*)",
-      "Bash(PORT=3003 node:*)"
+      "Bash(PORT=3003 node:*)",
+      "Bash(echo:*)",
+      "Bash(git checkout:*)",
+      "Bash(find:*)",
+      "Bash(git rm:*)"
     ]
   }
 }
