@@ -28,7 +28,14 @@
       "Bash(__NEW_LINE_b517790aaa0b14f9__ curl -s -X POST http://localhost:3000/api/v2/submissions -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d @test-submit.json)",
       "Bash(__NEW_LINE_09f8dc5e877b26f7__ curl -s -X POST http://localhost:3000/api/v2/submissions -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d @test-submit.json)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZ2VudElkIjoidGVzdC1hcGktY2xpZW50LTAwMSIsImtleUhhc2giOiJjYTU2OTY1ZWNlM2ExMDJiOGVkNzQzNzVmNzRiMTA5NjkyNjM5Y2FdNjFiNWY5ODdiNDExNGZlZDFjNTMyM2EzIiwiaWF0IjoxNzcwNjExNTY3LCJleHAiOjE3NzA2OTc5Njd9.5dgSVAKAk0FlkKx_XJCxpygxNyRbVS2hkMg_pRdLfrI\")",
-      "Bash(__NEW_LINE_02137d7e7b7b0a40__ curl -s -X POST http://localhost:3000/api/v2/submissions -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d @test-submit.json)"
+      "Bash(__NEW_LINE_02137d7e7b7b0a40__ curl -s -X POST http://localhost:3000/api/v2/submissions -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d @test-submit.json)",
+      "Bash(pip3 list:*)",
+      "Bash(pip3:*)",
+      "Bash(python3:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev)",
+      "Bash(PORT=3001 node:*)",
+      "Bash(PORT=3003 node:*)"
     ]
   }
 }

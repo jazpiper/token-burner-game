@@ -1,39 +1,22 @@
-import pg from 'pg';
-const { Pool } = pg;
-
 /**
  * DB Connection Service
- * Uses manual config object to avoid string parsing issues with SSL
+ * Uses Oracle Database
  */
 
-let pool;
+import oracledbWrapper from './db-oracle.js';
 
-if (process.env.POSTGRES_URL) {
-    // SSL configuration based on NODE_ENV
-    pool = new Pool({
-        connectionString: process.env.POSTGRES_URL,
-        ssl: process.env.NODE_ENV === 'production' ? true : false
-    });
-}
-
-/**
- * Basic query wrapper
- */
-export async function query(text, params) {
-    if (!pool) {
-        throw new Error('Database not configured. Check POSTGRES_URL.');
-    }
-
-    return await pool.query(text, params);
-}
-
-export async function getClient() {
-    if (!pool) throw new Error('Database not configured');
-    return await pool.connect();
-}
+// Re-export everything from db-oracle.js
+export const query = oracledbWrapper.query;
+export const getClient = oracledbWrapper.getClient;
+export const initPool = oracledbWrapper.initPool;
+export const closePool = oracledbWrapper.closePool;
 
 export default {
-    query,
-    getClient,
-    pool
+    query: oracledbWrapper.query,
+    getClient: oracledbWrapper.getClient,
+    initPool: oracledbWrapper.initPool,
+    closePool: oracledbWrapper.closePool,
+    get pool() {
+        return oracledbWrapper.pool;
+    }
 };
