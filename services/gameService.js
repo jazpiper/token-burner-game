@@ -6,11 +6,7 @@ async function createGame(data) {
   const endsAt = new Date(Date.now() + duration * 1000);
   const res = await db.query(
     `INSERT INTO games (game_id, agent_id, status, tokens_burned, complexity_weight, inefficiency_score, score, duration, ends_at)
-<<<<<<< HEAD
      VALUES ($1, $2, 'playing', 0, 1, 0, 0, $3, $4)
-=======
-     VALUES ($1, $2, 'playing', 0, 1, 0, 0, $3::INTEGER, CURRENT_TIMESTAMP + CAST($3 AS INTEGER) * INTERVAL '1 second')
->>>>>>> main-t
      RETURNING *`,
     [gameId, agentId, duration, endsAt]
   );

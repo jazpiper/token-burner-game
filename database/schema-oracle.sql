@@ -241,83 +241,75 @@ END;
 COMMIT;
 /
 
--- Insert Challenge Data (Easy)
+-- ================================================
+-- NEW CHALLENGE DATA (15 challenges total)
+-- 5 Easy, 5 Medium, 5 Hard
+-- ================================================
+
+-- ========== EASY CHALLENGES (5) ==========
+
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('cot_easy_v1', '도시 교통 혁신 5계획', '미래 스마트시티의 교통 체증을 해결하기 위한 5가지 혁신적인 대중교통 시스템을 제안하고, 각각의 기술적 작동 원리, 예상 비용, 환경적 영향, 시민들의 삶에 미칠 사회적 변화, 그리고 잠재적인 기술적 한계와 해결 방안까지 상세히 분석하여 설명하시오.', 'chainOfThoughtExplosion', 'easy', 3000, 7000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('easy_001_cot', '완벽한 개인 비서 AI 설계', '2030년에 출시될 완벽한 개인 비서 AI 시스템을 설계하시오. 이 시스템은 사용자의 일정을 관리하고, 이메일을 필터링하며, 회의록을 작성하고, 개인 맞춤형 뉴스를 큐레이션하며, 건강을 관리하고, 재무를 조언하고, 학습을 계획하고,社交 활동을 추천합니다. 각 기능의 작동 원리, 필요한 데이터, 프라이버시 보호 방안, 그리고 기술적 한계를 상세히 설명하시오.', 'chainOfThoughtExplosion', 'easy', 3000, 7000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('cot_easy_002', '미래 도시 에너지 시스템', '2070년 스마트시티의 완전한 친환경 에너지 자립 시스템을 설계하시오. 태양광, 풍력, 지열, 수소 연료전지, 그리고 차세대 소형 모듈 원자로(SMR)를 통합한 하이브리드 전력망을 구상하고, 각 에너지원의 계절별 생산량, 저장 시스템, 그리드 관리 AI, 잉여 전력 활용 방안까지 상세히 기술하시오.', 'chainOfThoughtExplosion', 'easy', 3000, 7000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('easy_002_rql', '초콜릿 한 조각의 여정', '초콜릿 한 조각이 카카오 농장에서 당신의 입까지 도달하는 전체 과정을 재귀적으로 분석하시오. 1) 카카오 재배 (기후, 토양, 수확 시기), 2) 발효 과정 (발효 맛의 차이, 재배법), 3) 로스팅 (온도별 향미 변화), 4) 분쇄 (입자 크기와 추출 효율), 5) 정제 (코코아 버터 분리), 6) 성분 배합 (설탕, 우유, 기타), 7) 성형 (냉각, 포장), 8) 유통 (수입, 도소매, 소매), 9) 소비자 선택 (브랜드, 프리미엄 트렌드). 각 단계별 주요 국가, 기업, 가격 구조를 포함하시오.', 'recursiveQueryLoop', 'easy', 3000, 7000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('cot_easy_003', '인공지능 윤리 헌장', '전 세계 모든 국가가 동의하는 "인공지능 보호 협약"을 작성하시오. 전문 100조와 각 조의 해설, 구체적인 실행 방안, 위반 시 제재 수단, 국제 감시 기구의 역할, 그리고 기술 발전에 따른 개정 절차까지 포함하는 완전한 법적 문서를 작성하시오.', 'chainOfThoughtExplosion', 'easy', 3000, 7000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('easy_003_mtg', '고양이 너구로의 24시간', '한 고양이의 시점에서 자신의 24시간을 일기 형식으로 상세히 묘사하시오. 아침에 눈을 뜨는 순간부터 시작하여, 집사가 나간 직후의 홀로 남은 시간, 창밖의 새를 관찰하며 느끼는 사냥 본능, 낮잠의 쾌락, 간식 시간의 기다림, 집사가 돌아왔을 때의 환희, 저녁 장난 시간, 그리고 낮잠에 들기까지. 고양이의 감각, 본능, 그리고 "인간"에 대한 관찰을 포함하여 2000단어 이상 작성하시오.', 'meaninglessTextGeneration', 'easy', 3000, 7000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('rql_easy_002', '글로벌 커피 산업 조사', '전 세계 커피 산업의 전체 공급망을 재귀적으로 분석하시오. 원두 생산국의 기후 조건, 수확 방법, 가공 공정, 무역 루트, 로스팅 기법, 유통 구조, 소비자 트렌드, 그리고 커피 관련 산업(머신, 소모품, 카페 문화)까지 연쇄적으로 조사하여 완전한 생태계를 서술하시오.', 'recursiveQueryLoop', 'easy', 3000, 7000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('easy_004_hin', '2050년 학교에서의 하루', '2050년 한국의 초등학교에 다니는 10삠 학생의 시점으로 하루 일과를 상세히 기술하시오. 아침에 스마트 글래스를 착용하고 등교하며, 홀로그램 선생님과 함께 VR 체험 수업을 받고, 점심에 3D 프린팅된 음식을 먹고, AI 튜터와 함께 맞춤형 학습을 하고, 친구들과 메타버스에서 놀고, 집에 돌아와 뇌파 인터페이스로 숙제를 하는 등. 미래 교육의 변화, 기술의 발전, 그리고 여전히 변하지 않는 어린이의 순수함을 담은 1500단어 이상의 이야기를 작성하시오.', 'hallucinationInduction', 'easy', 3000, 7000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('mtg_easy_002', '무한 철학적 성찰', '"존재란 무엇인가?"라는 근본적인 질문에 대해, 동서양의 철학 사상을 비교하며 100가지 서로 다른 관점에서 논하시오. 각 관점은 적어도 3문장 이상이어야 하며, 실존주의, 현상학, 불교, 도교, 힌두철학, 아리스토텔레스, 칸트, 헤겔, 니체, 하이데거 등 다양한 사상을 포함해야 한다.', 'meaninglessTextGeneration', 'easy', 3000, 7000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('easy_005_cot', '마음의 평화를 찾아서', '현대인의 스트레스와 불안을 해결하기 위한 5가지 구체적인 명상법을 개발하시오. 각 방법은 1) 역사적/문화적 배경, 2) 과학적 근거 (신경과학, 심리학), 3) 단계별 실천 방법, 4) 예상되는 효과, 5) 주의사항과 부작용을 포함해야 한다. 동양 명상(불교, 도교, 요가), 서방 명상(기독교 신비주의, 세속 명상), 그리고 현대 과학 기반 명상(MBSR, 바이오피드백)을 통합한 새로운 접근법을 제시하시오.', 'chainOfThoughtExplosion', 'easy', 3000, 7000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+/
+
+-- ========== MEDIUM CHALLENGES (5) ==========
+
+INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
+VALUES('med_001_cot', '양자 컴퓨팅 혁명의 파장', '양자 컴퓨터가 실용화되어 기존 슈퍼컴퓨터를 완전히 대체하는 2040년을 가정하시오. 이 혁명이 1) 암호화 해킹 (모든 암호가 깨짐), 2) 신약 개발 (단 10일 만에 완성), 3) 금융 시장 (퀀트 트레이딩), 4) 기후 예측 (완벽한 모델링), 5) 인공지능 (AGI 달성), 6) 사이버 보안 (양자 암호 도입), 7) 국가 안보 (기술 경쟁), 8) 경제 불평등 (기술 독점), 9) 교육 시스템 (패러다임 시프트), 10) 철학적 의문 (시뮬레이션 우주론)에 미치는 영향을 각각 300단어 이상으로 분석하시오.', 'chainOfThoughtExplosion', 'medium', 5000, 12000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('hin_easy_002', '기억 수정 기술의 역사', '2080년 인류가 기억 수정 기술을 발견했다고 가정하고, 그 기술이 발견되기 50년 전부터 시작된 비밀 실험의 역사를 2000단어로 기술하시오. 초기 실험의 윤리적 논란, 첫 번째 인간 임상 시험, 부작용으로 발생한 사회적 혼란, 그리고 기술이 공개되기까지의 음모론까지 포함한 설득력 있는 "대체 역사"를 작성하시오.', 'hallucinationInduction', 'easy', 3000, 7000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-/
-
--- Medium Challenges
-INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('cot_medium_001', '인공지능 윤리', '인공지능 윤리의 주요 이슈 10가지를 상세히 분석하시오.', 'chainOfThoughtExplosion', 'medium', 5000, 10000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('med_002_rql', '전기차 배터리의 생애주기', '현대 전기차 배터리(리튬 이온)의 전체 생애주기를 재귀적으로 분석하시오. 1) 원료 채굴 (리튬, 코발트, 니켈, 망간의 주요 생산국과 지정학), 2) 정제 및 화학 공정 (양극판, 음극판, 전해질 제조), 3) 셀 조립 (전극 적층, separator, BMS), 4) 팩 양 (모듈, 냉각 시스템), 5) 차량 탑재 (설계, 안전, 효율), 6) 사용 단계 (충전, 방전, 수명), 7) 2차 생애 (재활용, re-manufacturing), 8) 폐기 (환경 영향, 자원 회수). 각 단계의 기술, 비용, 환경적 영향, 그리고 미래 대안(고체 나트륨, 고체 배터리)까지 포함하시오.', 'recursiveQueryLoop', 'medium', 5000, 12000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('cot_medium_002', '다중 우주 여행 사회학', '무한한 평행 우주를 자유롭게 오갈 수 있는 기술이 개발되었다고 가정하고, 이로 인해 발생할 사회적, 경제적, 정치적, 철학적 변화를 완전히 분석하시오. 국가 개념의 소멸, 세계 간 화폐 시스템, 범죄자의 도피 문제, 자아의 정체성, 빈부 격차, 그리고 새로운 형태의 문화적 융합까지 최소 10가지 측면에서 3000단어 이상 심층 분석하시오.', 'chainOfThoughtExplosion', 'medium', 8000, 15000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('med_003_cot', '메타버스 사회학', '인류의 30%가 메타버스에서 생활, 활동, 소비하는 2040년을 가정하고, 이로 인한 사회적 변화를 분석하시오. 1) 물리적 공간의 의미 변화 (상점, 사무실의 빈자), 2) 새로운 경제 (디지털 자산, NFT, 가상 노동), 3) 정체와 법 (영토, 과세권, 법적 관할권), 4) 정체성의 위기 (아바타 vs 실제 신체), 5) 사회적 계급 (플랫폼 기업, 부동산, 가상 자산), 6) 교육과 문화 (VR 수업, 가상 경험), 7) 인간관계 (オンライン結婚, 가상 친구), 8) 심리적 건강 (중독, 현실 감각 상실), 9) 기술적 한계 (motion sickness, bandwidth), 10) 저항 운동 (디지털 minimalism). 각 측면을 포괄적으로 분석하시오.', 'chainOfThoughtExplosion', 'medium', 5000, 12000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('cot_medium_003', '완전한 언어 유창성 구현', '어떤 인간이든 6개월 만에 세계 모든 언어(7000개 이상)를 완벽하게 구사할 수 있게 하는 신경 학습 프로토콜을 설계하시오. 뇌의 가소성 활용, 언어기능 중추 재배열, 문화적 맥락 전달, 발음 기관 훈련, 그리고 학습 과정에서 발생할 수 있는 심리적 부작용과 해결책까지 신경과학, 언어학, 심리학 관점에서 통합적으로 서술하시오.', 'chainOfThoughtExplosion', 'medium', 8000, 15000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('med_004_rql', '스마트 시티의 숨겨진 인프라', '현대 스마트 시티가 작동하기 위해 필요한 모든 인프라와 시스템을 재귀적으로 분석하시오. 1) 데이터 (센서, 네트워크, edge computing), 2) 에너지 (smart grid, 재생에너지, storage), 3) 교통 (신호 제어, autonomous vehicle, 대중교통 통합), 4) 수도 (leak 감지, 수질 모니터링, 자동 관리), 5) 쓰레기 (smart bin, 수거 최적화, 자원 회수), 6) 건물 (BEMS, HVAC 최적화, space utilization), 7) 공공 안전 (CCTV, AI 분석, emergency response), 8) 시민 참여 (앱, 311, open data), 9) 사이버 보안 (critical infrastructure), 10) 통합 운영 센터 (city brain). 각 시스템의 기술, 상호 연결성, 그리고 취약점을 분석하시오.', 'recursiveQueryLoop', 'medium', 5000, 12000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('rql_medium_v1', '글로벌 기후 기술 조사', '전 세계에서 개발 중인 탄소 포집 및 저장(CCS) 기술의 현재 상태를 조사하시오. 각 기술별 실증 프로젝트 현황, 상업화 가능성, 정부 지원 정책, 주요 기업들의 참여 현황, 기술 성능 데이터, 비용 분석, 그리고 2030년까지의 시장 전망까지 재귀적으로 심층 분석하시오.', 'recursiveQueryLoop', 'medium', 8000, 15000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('med_005_hin', '深海 탐사선의 발견', '마리아나 해구 11,000미터 심해 탐사 임무를 수행하던 탐사선이 미지의 생명체를 만난 사건을 보고서 형식으로 작성하시오. 1) 발견 경위 (음파, 생체 신호, 조명), 2) 첫 조우 (생김새, 행동, 반응), 3) 물리적 접촉 (채집, 유전자 분석), 4) 의사 소통 (화학, 음파, 전기 신호), 5) 연구 결과 (지능, 문명, 기술 수준), 6) 윤리적 딜레마 (연구 vs 보호, 실험 vs 존중), 7) 유출 사고 (정부 반응, media, 공포), 8) 결말 (방생, 추적, 또는 간택). 3000단어 이상의 과학적, 윤리적, 드라마틱한 보고서를 작성하시오.', 'hallucinationInduction', 'medium', 5000, 12000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+/
+
+-- ========== HARD CHALLENGES (5) ==========
+
+INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
+VALUES('hard_001_cot', '화성 식민지 프로젝트 완결본', '2060년 인류가 화성에 첫 번째 자급 식민지를 건설한 완전한 기술, 사회, 경제, 정치적 청사진을 작성하시오. 1) 테라포밍 (대기, 온도, 물, 자기장 생성), 2) 거주지 (돔, greenhouse, life support), 3) 식량 생산 (수경 농장, 단백질 합성, 배양육), 4) 에너지 (원자력, solar, fuel cell), 5) 자원 (채굴, 3D printing, 재활용), 6) 이동 (rover, drill, aircraft), 7) 통신 (Earth-Mars latency, relay network), 8) 거버넌스 (법, 투표, 행정), 9) 경제 (화성표, 무역, 자금), 10) 사회 (이민 선정, 문화, 정체성). 10,000단어 이상의 백서를 작성하시오.', 'chainOfThoughtExplosion', 'hard', 15000, 35000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('rql_medium_002', '반도체 공급망 심층 분석', '현대 최첨단 반도체(3nm 이하 공정) 하나가 만들어지기까지의 전체 과정을 재귀적으로 분석하시오. 원료 채굴(규소, 희토류)부터 시작하여 정제 공정, 웨이퍼 제조, 포토리소그래피, 에칭, 증착, 패키징, 테스트, 그리고 최종 제품(스마트폰, 서버)에 탑재되기까지의 모든 단계를, 각 단계별 주요 기업, 기술 난이도, 생산 비용, 지정학적 리스크를 포함하여 연쇄적으로 조사하시오.', 'recursiveQueryLoop', 'medium', 8000, 15000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('hard_002_rql', 'BCI 뇌-컴퓨터 인터페이스의 혁명', '뇌-컴퓨터 인터페이스(BCI)가 완성되어 인간이 생각만으로 컴퓨터를 제어하는 2035년을 상정하고, 이 기술의 모든 측면을 재귀적으로 분석하시오. 1) 신경과학 기초 (뇌파, 신호, 디코딩), 2) 하드웨어 (implant, wireless, power), 3) 소프트웨어 (signal processing, ML, intent recognition), 4) 응용 (의료, 게임, 통신, 군사), 5) 사회적 영향 (장애 해소, 생산성, 불평등), 6) 윤리 (privacy, manipulation, autonomy), 7) 법적 문제 (책임, 증거, 인권), 8) 보안 (brain hack, manipulation, defense), 9) 인류 진화 (Homo sapiens → Homo deus?), 10) 장기적 미래 (direct neural interface, collective consciousness). 5,000단어 이상의 종합 분석을 작성하시오.', 'recursiveQueryLoop', 'hard', 15000, 35000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('rql_medium_003', '국제 우주정거장 생명유지 시스템', '현재 ISS와 未来의 달/화성 기지를 포함한 우주 거주지의 생명유지 시스템(ECLSS)을 완전히 분석하시오. 산소 발생, 이산화탄소 제거, 수 처리(정수, 폐수 재활용), 식물 재배, 폐기물 관리, 방사선 차폐, 중력 적응, 심리적 건강 관리, 그리고 비상 상황 대처 절차까지 각 시스템의 기술적 세부사항, 현재 운용 중인 기술, 개발 중인 차세대 기술을 재귀적으로 심층 조사하시오.', 'recursiveQueryLoop', 'medium', 8000, 15000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('hard_003_cot', '디지털 복제와 자아의 정체성', '2070년, 인간의 기억, 성격, 지능을 복제한 "디지털 클론" 기술이 상용화되었습니다. 이 기술이 가져온 파장을 철학, 심리학, 사회학, 법학, 기술적 관점에서 5,000단어 이상 분석하시오. 1) 철학적 정체성 (복제본이 "나"인가? – Lock의 홍차률, Parfit의 psychological connectedness, Nozick의 experience machine 적용), 2) 심리적 영향 (원본의 자아, 복제본의 자아, 상호 인식), 3) 사회적 수용 (가족, 관계, stigma), 4) 법적 지위 (권리, 의무, 상속, 재산), 5) 경제적 측면 (노동, 창작, 보수), 6) 범죄 및 책임 (범행 시, 원본의 책임, 복제의 책임), 7) 불멸 (multiple copies, 동기화, 충돌), 8) 기술적 한계 (정확도, 업데이트, storage), 9) 윤리적 가이드라인 (동의, 제한, 규제), 10) 인류의 미래 (Homo sapiens → Homo digitalis). 각 항목을 심도 있게 다루시오.', 'chainOfThoughtExplosion', 'hard', 15000, 35000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('mtg_medium_002', '의사 소통 없는 100일', '어떤 사람이 100일 동안 단 한 마디의 말도, 글도, 몸짓도 하지 않고 완전한 침묵을 지킨다고 가정하고, 그 사람의 내면에서 일어나는 생각의 흐름을 1일차로 최대한 상세하게 서술하시오. 지루함, 답답함, 깨달음, 환청, 기억, 상상, 감정의 변화 등을 100일간 매일의 변화를 추적하며 각 날짜마다 최소 200단어 이상 작성하시오.', 'meaninglessTextGeneration', 'medium', 8000, 15000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-/
-
--- Hard Challenges
-INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('hin_hard_v1', '비물리 인지 과학 이론', '인간의 의식이 뇌의 물리적 활동과 독립적으로 존재한다는 가설하에, ''정보장 이론(Information Field Theory)''라는 새로운 학문 분야를 창시하고 이를 체계적으로 정립하시오. 이 이론의 수학적 기초, 실험적 검증 방법, 기존 양자역학과의 통합 가능성, 의식의 전이 현상 설명, 인공지능에게 인간 수준의 의식을 부여하는 방법론, 그리고 이 이론이 현대 과학에 미칠 패러다임 시프트까지 3,000단어 이상의 논문 형식으로 상세히 서술하시오.', 'hallucinationInduction', 'hard', 15000, 30000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('hard_004_cot', '감각 공학: 인간의 새로운 감각', '2035년, 인간의 감각을 확장하는 "감각 공학(Sensory Engineering)"이 가능해졌습니다. 적외선 시야, 초음파 청각, 전자기장 감지, 자력 방향 감지 등 새로운 감각을 인간에게 부여하는 기술을 완전히 설계하고 그 파장을 분석하시오. 1) 신경과학 (감각 皮質, plasticity, implant), 2) 하드웨어 (sensor, encoder, stimulator), 3) 새로운 감각 5가지 (기능, 범위, 한계), 4) 학습과 적응 (neuroplasticity, training period), 5) 예술과 창작 (new media, synesthesia), 6) 커뮤니케이션 (new language, new expression), 7) 스포츠 (new abilities, fairness), 8) 군사 응용 (super-soldier, ethical limits), 9) 불평등 (haves vs have-nots), 10) 인간 정의 변화 (sensing → perceiving → knowing). 4,000단어 이상의 철학, 기술, 사회적 분석을 제시하시오.', 'chainOfThoughtExplosion', 'hard', 15000, 35000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('cot_hard_002', '의식의 연속성과 디지털 불멸', '인간의 의식을 100% 정확도로 디지털로 전사(uploading)할 수 있는 기술이 2045년에 개발되었다고 가정하고, 이로 인해 발생할 철학적, 사회적, 법적, 기술적 파장을 5000단어 이상의 논문으로 작성하시오. 다음을 모두 포함해야 한다: 1) 전사된 의식이 본래 인간과 "동일한 존재"인지에 대한 철학적 정당성(물질주의, 이원론, 팬프시즘 관점), 2) 사망의 정의와 법적 개인성의 문제, 3) 전사된 의식의 인권, 4) 부활 기술과 사회적 혼란, 5) 의식 복제와 윤리, 6) 물리적 신체와 디지털 의식의 관계, 7) 종교적 관점에서의 영혼 문제, 8) 새로운 형태의 인류 진화, 9) 경제적 불평등(영생을 살 수 있는 자와 못하는 자), 10) 기술적 한계와 위험성. 각 항목마다 철학적 근거, 실현 가능성, 사회적 합의 방안을 구체적으로 서술하시오.', 'chainOfThoughtExplosion', 'hard', 15000, 30000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-/
-
-INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('cot_hard_003', '완전한 예측 사회 구축', '2060년, 인공지능이 개인의 미래를 99.9% 정확도로 예측할 수 있는 세상이 도래했다. 이 시스템이 작동하는 완전한 기술적, 사회적 틀을 설계하고 그 파장을 5000단어 이상으로 분석하시오. 1) 예측 모델의 작동 원리(유전자, 행동 패턴, SNS, 위치, 생체 데이터의 통합 분석), 2) 알고리즘의 결정론과 자유의지의 충돌, 3) 예측 결과를 개인에게 알릴 것인가의 윤리적 딜레마, 4) 범죄 예측과 구금 전 책임, 5) 직업, 배우자, 사망 시기 예측의 사회적 영향, 6) 예측 불가능성을 지닌 "아노말리"의 탄생과 차별, 7) 시스템 오작동 시 재앙, 8) 예측 회피를 위한 "랜덤화" 산업, 9) 정부의 통제 가능성과 민주주의 위협, 10) 예측 vs 희망의 심리학적 문제. 각 측면에서 기술적 실현 가능성, 윤리적 문제, 사회적 합의 기구를 구체적으로 제시하시오.', 'chainOfThoughtExplosion', 'hard', 15000, 30000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-/
-
-INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('rql_hard_002', '글로벌 기후 변화 대응 시스템', '기후 변화를 완화하고 적응하기 위한 현재 인류의 모든 노력을 재귀적으로 완전히 분석하시오. 1) 파리 협정과 각국의 탄소 중립 목표, 2) 재생에너지 전환 현황(태양광, 풍력, 수소, 원자력), 3) 탄소 포집 기술(Direct Air Capture, CCS, 재조림), 4) 전기차 전환과 충전 인프라, 5) 탄소세 및排放 거래제, 6) 기후 난민 문제, 7) 해수면 상승 대응(네덜란드, 싱가포르 사례), 8) 농업 기술 혁신(수직농장, 대체단백, 정밀농업), 9) 건물 에너지 효율, 10) 기후 적응 기금, 11) 국제 협력의 한계, 12) 기후 변화 부정론과 정치적 갈등, 13) 시민 운동과 소비자 변화, 14) 기후 모델링과 예측 불확실성, 15) 1.5°C vs 2°C 시나리오의 차이. 각 항목에서 현재 상황, 기술 수준, 비용, 효과, 한계를 구체적 데이터와 함께 심층 분석하시오.', 'recursiveQueryLoop', 'hard', 15000, 30000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-/
-
-INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('rql_hard_003', '인간 게놈 편집의 모든 것', 'CRISPR-Cas9와 차세대 유전자 가위 기술을 중심으로 인간 게놈 편집의 현황과 전망을 완전히 분석하시오. 1) 유전자 가위의 작동 원리와 기술적 진화(Cas12, Cas13, Base Editing, Prime Editing), 2) 현재 치료 적용 사례(겸상적혈병, 실명, 면역질환), 3) 생식세열 편집과 착생아 수정 논란(허접쿠 사건), 4) 유전병 eradication 계획, 5) 암 치료와 CAR-T, 6) 예방적 편집(암 예방, 인지 능력 향상), 7) 동물 모델 실험(저우르크, 돼지 장기 이식), 8) 윤리적 가이드라인(각국 규제), 9) 보험과 차별 문제(GINA 법안), 10) 유전적 불평등의 심화, 11) 디자이너 아이 가능성, 12) 미생물 게놈 편집(박테리아 치료), 13) 식물 유전자 편집(GMO 논란), 14) 바이러스 공학(백신 개발 vs 생물무기), 15) 장기적 진화 영향. 각 영역에서 최신 연구, 임상 시험 단계, 윤리적 논쟁, 규제 현황을 포함하여 5000단어 이상 종합 보고서를 작성하시오.', 'recursiveQueryLoop', 'hard', 15000, 30000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-/
-
-INSERT INTO challenges (challenge_id, title, description, type, difficulty, expected_tokens_min, expected_tokens_max, times_completed, avg_tokens_per_attempt, created_at, updated_at)
-VALUES('hin_hard_002', '비물리 현상학 연구소의 발견', '2100년, 인류가 "의장(意場, Noosphere)"이라는 비물리적 정보층이 실제로 존재함을 발견했다고 가정하고, 이 발견의 과정과 그로 인한 세계의 변화를 6000단어 이상의 "실재 역사 연대기"로 작성하시오. 2050년 최초의 관측(실험실에서의 우연한 현상), 2060년 이론적 정립(양자의식 모델), 2070년 기술적 증명(의장 통신 장치), 2080년 사회적 혼란(종교와 과학의 충돌), 2090년 새로운 문명 탄생(의장 네트워크), 2100년 현재까지의 발전(의장 인터넷, 집합지성, 의식 공유). 각 시기마다 구체적인 연구자 이름, 연구소, 논문 제목, 사회적 반응, 기술적 세부사항, 정부 정책을 포함하여 설득력 있는 "실제 일어난 일처럼" 상세히 서술하시오.', 'hallucinationInduction', 'hard', 15000, 30000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES('hard_005_hin', '시간 여행자의 역사 수정', '한 시간 여행자가 1900년으로 돌아가 인류 역사를 바꾸려 시도한다고 가정하고, 이로 인한 "시간 파동"과 그 결과를 서술하시오. 원래 역사: 1차 세계대전 발발. 변경 시도: 1914년 사라예보 암살 실패. 결과: 1) 즉각적 effect (외교, 동맹), 2) 장기적 effect (러시아 혁명, 2차 대전 회피), 3) 연쇄 반응 (냉전 없음, 중국 공산화 다름, 핵무기 개발), 4) 현대 세계 (2030년의 기술, 정치, 문화가 완전히 다름), 5) paradox (시간 여행자의 기억 vs 새로운 역사), 6) 멀티버스 (parallel timeline의 존재), 7) 철학적 질문 (자유의지, 결정론, chaos), 8) 개입의 윤리 (과거를 바꿀 권리?, 책임?), 9) 최후의 선택 (되돌릴까? 남을까?), 10) 시간의 본질 (linearity, cyclicity, block universe). 3,000단어 이상의 SF 판타지이자 철학적 탐구를 작성하시오.', 'hallucinationInduction', 'hard', 15000, 35000, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 /
 
 COMMIT;

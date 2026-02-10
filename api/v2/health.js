@@ -1,60 +1,47 @@
 /**
- * GET /api/v2/health - 헬스체크
+ * GET /api/v2/health - Health check endpoint
  */
 import db from '../../services/db.js';
+import {
+  setCORSHeaders,
+  handleOptions,
+  sendResponse
+} from './middleware.js';
 
-/**
- * CORS 헤더 설정
- */
-function setCORSHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
-}
-
-/**
- * Vercel Serverless Function Handler
- */
 export default async function handler(req, res) {
-  setCORSHeaders(res);
-
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  setCORSHeaders(res, ['GET', 'OPTIONS']);
+  if (handleOptions(req, res)) return;
 
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return sendResponse(res, {
+      status: 405,
+      body: { error: 'Method not allowed' }
+    });
   }
 
   try {
-    // 경로 파싱
-    const pathname = req.url.split('?')[0];
-    const pathParts = pathname.split('/').filter(Boolean);
+    let dbStatus = 'not configured';
 
-    // GET /api/v2/health
-    if (pathParts[2] === 'health') {
-      let dbStatus = 'not configured';
-      
-      if (process.env.POSTGRES_URL) {
-        try {
-          await db.query('SELECT 1');
-          dbStatus = 'connected';
-        } catch (e) {
-          dbStatus = 'error: ' + e.message;
-        }
+    // Check for Oracle DB connection
+    if (process.env.ORACLE_USER || process.env.ORACLE_CONNECTION_STRING) {
+      try {
+        await db.query('SELECT 1 FROM DUAL');
+        dbStatus = 'connected (Oracle)';
+      } catch (e) {
+        dbStatus = 'error: ' + e.message;
       }
-
-      return res.json({
-        status: 'healthy',
-        database: dbStatus,
-        timestamp: new Date().toISOString(),
-        env: process.env.NODE_ENV || 'production'
-      });
     }
 
-    return res.status(404).json({ error: 'Not found', path: req.url });
+    return res.json({
+      status: 'healthy',
+      database: dbStatus,
+      timestamp: new Date().toISOString(),
+      env: process.env.NODE_ENV || 'development'
+    });
   } catch (error) {
-    return res.status(500).json({ status: 'error', message: error.message });
+    return sendResponse(res, {
+      status: 500,
+      body: { status: 'error', message: error.message }
+    });
   }
 }

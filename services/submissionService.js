@@ -83,10 +83,14 @@ async function createSubmission(data) {
 // Async leaderboard refresh (non-blocking)
 async function refreshLeaderboardAsync() {
   try {
-    await db.query('REFRESH MATERIALIZED VIEW leaderboard_mv');
+    // Oracle uses stored procedure for materialized view refresh
+    await db.query('BEGIN refresh_leaderboard; END;');
   } catch (e) {
-    console.error('Leaderboard refresh failed:', e.message);
-    throw e;
+    // Log warning but don't fail the submission
+    // This is a non-critical operation - the MV will refresh on its schedule
+    console.warn('Materialized view refresh failed (non-critical):', e.message);
+    console.warn('Submissions will still work. The leaderboard will update on next scheduled refresh.');
+    // Don't throw - let the submission succeed
   }
 }
 

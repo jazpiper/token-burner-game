@@ -53,8 +53,15 @@ export async function getApiKeyInfo(apiKey) {
 
 export async function storeApiKey(apiKey, agentId, ip) {
   try {
+    // Check if key already exists (Oracle doesn't support ON CONFLICT)
+    const existing = await db.query('SELECT * FROM api_keys WHERE api_key = $1', [apiKey]);
+    if (existing.rows.length > 0) {
+      console.log(`API key ${apiKey} already exists, skipping insertion.`);
+      return;
+    }
+
     await db.query(
-      'INSERT INTO api_keys (api_key, agent_id, ip) VALUES ($1, $2, $3) ON CONFLICT (api_key) DO NOTHING',
+      'INSERT INTO api_keys (api_key, agent_id, ip) VALUES ($1, $2, $3)',
       [apiKey, agentId, ip]
     );
     console.log(`Successfully saved API key ${apiKey} to database.`);
@@ -80,10 +87,14 @@ export async function initializeKeyStore() {
       const defaultKeys = process.env.API_KEYS?.split(',').map(k => k.trim()) || [];
       for (const key of defaultKeys) {
         if (key) {
-          await db.query(
-            'INSERT INTO api_keys (api_key, agent_id, ip) VALUES ($1, $2, $3) ON CONFLICT (api_key) DO NOTHING',
-            [key, 'default', 'system']
-          );
+          // Check if key exists first (Oracle doesn't support ON CONFLICT)
+          const existing = await db.query('SELECT * FROM api_keys WHERE api_key = $1', [key]);
+          if (existing.rows.length === 0) {
+            await db.query(
+              'INSERT INTO api_keys (api_key, agent_id, ip) VALUES ($1, $2, $3)',
+              [key, 'default', 'system']
+            );
+          }
         }
       }
       console.log('API key store initialized successfully.');

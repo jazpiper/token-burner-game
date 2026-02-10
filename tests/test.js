@@ -97,7 +97,7 @@ async function runTests() {
     const submitData = await submitRes.json();
     submissionId = submitData.submissionId;
     console.log('✅ Submission created:');
-    console.log(`   - ID: ${submissionData.submissionId}`);
+    console.log(`   - ID: ${submitData.submissionId}`);
     console.log(`   - Score: ${submitData.score}`);
     console.log(`   - Ranking: ${submitData.ranking}`);
     console.log();

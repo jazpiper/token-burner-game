@@ -1,53 +1,33 @@
 /**
- * POST /api/v2/games/:id/actions - 액션 수행
+ * POST /api/v2/games/:id/actions - Execute game action
  */
 import { gameLogic } from '../../shared/gameLogic.js';
 import { getGameById, addGameAction } from '../../services/gameService.js';
-<<<<<<< HEAD
-=======
-import jwt from 'jsonwebtoken';
+import {
+  setCORSHeaders,
+  handleOptions,
+  verifyAuth,
+  responses,
+  sendResponse
+} from './middleware.js';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-function verifyToken(token) {
-  if (!JWT_SECRET) {
-    throw new Error('JWT_SECRET environment variable is required');
-  }
-  try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch {
-    return null;
-  }
-}
->>>>>>> main-t
-
-function setCORSHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
-}
+const validMethods = ['chainOfThoughtExplosion', 'recursiveQueryLoop', 'meaninglessTextGeneration', 'hallucinationInduction'];
 
 export default async function handler(req, res) {
-  setCORSHeaders(res);
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  setCORSHeaders(res, ['POST', 'OPTIONS']);
+  if (handleOptions(req, res)) return;
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return sendResponse(res, {
+      status: 405,
+      body: { error: 'Method not allowed' }
+    });
   }
 
-  // Verify JWT token
-  const authHeader = req.headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized', message: 'Authorization header required' });
-  }
-
-  const token = authHeader.substring(7);
-  const decoded = verifyToken(token);
+  // Verify JWT token using middleware utility
+  const decoded = verifyAuth(req);
   if (!decoded) {
-    return res.status(401).json({ error: 'Unauthorized', message: 'Invalid token' });
+    return sendResponse(res, responses.unauthorized('Invalid token'));
   }
 
   const pathParts = req.url.split('/').filter(Boolean);
@@ -56,48 +36,32 @@ export default async function handler(req, res) {
     const gameId = pathParts[3];
 
     if (!gameId) {
-      return res.status(400).json({
-        error: 'Invalid request',
-        details: [{ field: 'gameId', message: 'gameId is required' }]
-      });
+      return sendResponse(res, responses.badRequest('Missing required fields', [
+        { field: 'gameId', message: 'gameId is required' }
+      ]));
     }
 
     const { method, tokensBurned, text, inefficiencyScore } = req.body;
 
-    const validMethods = ['chainOfThoughtExplosion', 'recursiveQueryLoop', 'meaninglessTextGeneration', 'hallucinationInduction'];
     if (!method || !validMethods.includes(method)) {
-      return res.status(400).json({
-        error: 'Invalid request',
-        details: [{ field: 'method', message: 'Invalid method' }]
-      });
+      return sendResponse(res, responses.badRequest('Invalid method', [
+        { field: 'method', message: 'Invalid method' }
+      ]));
     }
 
-<<<<<<< HEAD
-    // PostgreSQL에서 게임 가져오기 (메모리 Map 제거)
-=======
-    // Get game from database instead of memory Map
->>>>>>> main-t
+    // Get game from database
     const game = await getGameById(gameId);
     if (!game) {
-      return res.status(404).json({ error: 'Game not found' });
+      return sendResponse(res, responses.notFound('Game'));
     }
 
     if (game.status !== 'playing') {
-      return res.status(400).json({ error: 'Game is not playing', status: game.status });
+      return sendResponse(res, {
+        status: 400,
+        body: { error: 'Game is not playing', status: game.status }
+      });
     }
 
-<<<<<<< HEAD
-    // 게임 로직 실행
-    const gameResult = gameLogic.executeAction(game, method);
-
-    // PostgreSQL에 액션 저장 (메모리 Map 제거)
-    await addGameAction(gameId, {
-      method,
-      tokensBurned: gameResult.tokensBurned,
-      complexityWeight: gameResult.complexityWeight,
-      inefficiencyScore: gameResult.inefficiencyScore,
-      textPreview: gameResult.textPreview
-=======
     // Use gameLogic to calculate action results (pure function, no state mutation)
     const actionResult = gameLogic.executeAction(
       {
@@ -115,7 +79,6 @@ export default async function handler(req, res) {
       complexityWeight: actionResult.complexityWeight,
       inefficiencyScore: actionResult.inefficiencyScore || 0,
       textPreview: actionResult.text || text?.substring(0, 500)
->>>>>>> main-t
     });
 
     return res.json({
@@ -127,5 +90,5 @@ export default async function handler(req, res) {
     });
   }
 
-  return res.status(404).json({ error: 'Not found', path: req.url });
+  return sendResponse(res, responses.notFound());
 }

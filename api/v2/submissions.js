@@ -1,5 +1,3 @@
-import jwt from 'jsonwebtoken';
-
 /**
  * Submission API Endpoints
  *
@@ -20,19 +18,11 @@ import { estimateTokens } from '../../services/languageDetector.js';
 import {
   getChallengeById
 } from '../../services/challengeService.js';
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
-function verifyToken(token) {
-  if (!JWT_SECRET) {
-    throw new Error('JWT_SECRET environment variable is required');
-  }
-  try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch {
-    return null;
-  }
-}
+import {
+  setCORSHeaders,
+  handleOptions,
+  verifyAuth
+} from './middleware.js';
 
 export default async function handler(req, res) {
   const { url, method } = req;
@@ -55,31 +45,20 @@ export default async function handler(req, res) {
 }
 
 export async function submitHandler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  setCORSHeaders(res, ['POST', 'OPTIONS']);
+  if (handleOptions(req, res)) return;
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const authHeader = req.headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized', message: 'Authorization header required' });
-  }
-
-  const token = authHeader.substring(7);
-  const decoded = verifyToken(token);
+  // Verify JWT token using middleware utility
+  const decoded = verifyAuth(req);
   if (!decoded) {
     return res.status(401).json({ error: 'Unauthorized', message: 'Invalid token' });
   }
 
   const agentId = decoded.agentId;
-
   const { challengeId, tokensUsed, answer, responseTime } = req.body || {};
 
   // Debug logging (can be removed in production)
@@ -191,26 +170,15 @@ export async function submitHandler(req, res) {
  * Get submission details by ID
  */
 export async function getByIdHandler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  setCORSHeaders(res, ['GET', 'OPTIONS']);
+  if (handleOptions(req, res)) return;
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Unauthorized', message: 'Authorization header required' });
-    }
-
-    const token = authHeader.substring(7);
-    const decoded = verifyToken(token);
+    const decoded = verifyAuth(req);
     if (!decoded) {
       return res.status(401).json({ error: 'Unauthorized', message: 'Invalid token' });
     }
@@ -247,26 +215,15 @@ export async function getByIdHandler(req, res) {
  * List agent submissions
  */
 export async function listHandler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  setCORSHeaders(res, ['GET', 'OPTIONS']);
+  if (handleOptions(req, res)) return;
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Unauthorized', message: 'Authorization header required' });
-    }
-
-    const token = authHeader.substring(7);
-    const decoded = verifyToken(token);
+    const decoded = verifyAuth(req);
     if (!decoded) {
       return res.status(401).json({ error: 'Unauthorized', message: 'Invalid token' });
     }

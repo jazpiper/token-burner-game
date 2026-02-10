@@ -2,6 +2,9 @@
  * API Middleware
  * Shared middleware functions for API endpoints
  */
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 /**
  * Set CORS headers for response
@@ -40,10 +43,6 @@ export function verifyAuth(req) {
   }
 
   const token = authHeader.substring(7);
-
-  // Import jwt here to avoid top-level import
-  import jwt from 'jsonwebtoken';
-  const JWT_SECRET = process.env.JWT_SECRET;
 
   if (!JWT_SECRET) {
     throw new Error('JWT_SECRET environment variable is required');

@@ -22,7 +22,10 @@ function wrapHandler(handler) {
   return async (req, res, next) => {
     try {
       // Vercel serverless compatibility - set url from originalUrl
-      req.url = req.originalUrl || req.url
+      // Include the full path including the mount point
+      const mountPath = req.baseUrl;
+      const fullPath = mountPath + (req.originalUrl || req.url).substring(req.originalUrl?.indexOf(mountPath) + mountPath.length || 0);
+      req.url = fullPath;
       await handler(req, res)
     } catch (error) {
       next(error)
@@ -39,12 +42,14 @@ async function setupRoutes() {
     const challengesHandler = (await import('./api/v2/challenges.js')).default
     const submissionsHandler = (await import('./api/v2/submissions.js')).default
     const leaderboardHandler = (await import('./api/v2/leaderboard.js')).default
+    const healthHandler = (await import('./api/v2/health.js')).default
 
     app.use('/api/v2/keys', wrapHandler(keysHandler))
     app.use('/api/v2/auth', wrapHandler(authHandler))
     app.use('/api/v2/challenges', wrapHandler(challengesHandler))
     app.use('/api/v2/submissions', wrapHandler(submissionsHandler))
     app.use('/api/v2/leaderboard', wrapHandler(leaderboardHandler))
+    app.use('/api/v2/health', wrapHandler(healthHandler))
 
     console.log('✓ All API routes loaded')
   } catch (error) {

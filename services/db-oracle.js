@@ -119,8 +119,21 @@ export async function query(text, params = []) {
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
+        // Explicitly commit for INSERT/UPDATE/DELETE queries
+        // Check if the SQL is a modifying query (not SELECT)
+        const upperSql = oracleSql.trim().toUpperCase();
+        const isModifyingQuery = upperSql.startsWith('INSERT') ||
+                                 upperSql.startsWith('UPDATE') ||
+                                 upperSql.startsWith('DELETE') ||
+                                 upperSql.startsWith('MERGE');
+
+        if (isModifyingQuery && result.rowsAffected > 0) {
+            await connection.commit();
+        }
+
         // Convert Oracle result to PostgreSQL-like format (async for CLOB handling)
-        const rows = await Promise.all(result.rows.map(async row => {
+        // Handle case where result.rows is undefined (e.g., for INSERT/UPDATE/DELETE)
+        const rows = result.rows ? await Promise.all(result.rows.map(async row => {
             const converted = {};
             for (const [key, value] of Object.entries(row)) {
                 // Oracle returns uppercase column names, convert to lowercase for PostgreSQL compatibility
@@ -144,7 +157,7 @@ export async function query(text, params = []) {
                 }
             }
             return converted;
-        }));
+        })) : [];
 
         return {
             rows: rows,
@@ -220,21 +233,30 @@ export async function getClient() {
             );
 
             // Handle case where result.rows is undefined (e.g., for INSERT/UPDATE/DELETE)
-            const rows = result.rows ? result.rows.map(row => {
+            const rows = result.rows ? await Promise.all(result.rows.map(async row => {
                 const converted = {};
                 for (const [key, value] of Object.entries(row)) {
+                    // Convert to lowercase for PostgreSQL compatibility
+                    const lowerKey = key.toLowerCase();
                     if (value && typeof value === 'object') {
                         if (value.constructor?.name === 'Lob') {
-                            converted[key] = null;
+                            // Convert CLOB to string
+                            try {
+                                converted[lowerKey] = value && typeof value.getData === 'function'
+                                    ? await value.getData()
+                                    : null;
+                            } catch (e) {
+                                converted[lowerKey] = null;
+                            }
                         } else {
-                            converted[key] = value;
+                            converted[lowerKey] = value;
                         }
                     } else {
-                        converted[key] = value;
+                        converted[lowerKey] = value;
                     }
                 }
                 return converted;
-            }) : [];
+            })) : [];
 
             return {
                 rows: rows,
@@ -284,6 +306,8 @@ if (process.env.NODE_ENV === 'production') {
         console.error('Failed to initialize Oracle DB pool:', err);
     });
 }
+
+export { convertSQL };
 
 export default {
     query,

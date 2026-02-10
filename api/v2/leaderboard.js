@@ -1,89 +1,89 @@
 /**
- * GET /api/v2/leaderboard - 리더보드
+ * GET /api/v2/leaderboard - Get leaderboard
+ * GET /api/v2/leaderboard/rank/:agentId - Get agent rank
  */
 import {
   getLeaderboard,
   getAgentRank
 } from '../../services/leaderboardService.js';
 import { checkRateLimit } from '../../shared/rateLimitingService.js';
-
-function setCORSHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
-}
+import {
+  setCORSHeaders,
+  handleOptions,
+  parseQueryParams,
+  buildFilters,
+  responses,
+  sendResponse
+} from './middleware.js';
 
 export default async function handler(req, res) {
-  setCORSHeaders(res);
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  setCORSHeaders(res, ['GET', 'OPTIONS']);
+  if (handleOptions(req, res)) return;
 
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return sendResponse(res, {
+      status: 405,
+      body: { error: 'Method not allowed' }
+    });
   }
 
   try {
     const pathname = req.url.split('?')[0];
     const pathParts = pathname.split('/').filter(Boolean);
 
+    // Route: /api/v2/leaderboard
     if (pathParts.length === 3 && pathParts[2] === 'leaderboard') {
-      const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
-      const rateLimitResult = await checkRateLimit(`leaderboard:${ip}`, 100, 60 * 1000);
-
-      if (!rateLimitResult.allowed) {
-        return res.status(429).json({
-          error: 'Too many requests, please try again later'
-        });
-      }
-
-      const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;
-      const type = urlParams.get('type');
-      const difficulty = urlParams.get('difficulty');
-      const page = parseInt(urlParams.get('page')) || 1;
-      const limit = parseInt(urlParams.get('limit')) || 100;
-
-      const filters = {};
-      if (type) filters.type = type;
-      if (difficulty) filters.difficulty = difficulty;
-
-      const leaderboardData = await getLeaderboard(filters, page, limit);
-
-      return res.json(leaderboardData);
+      return listHandler(req, res);
     }
 
+    // Route: /api/v2/leaderboard/rank/:agentId
     if (pathParts[3] === 'rank' && pathParts[4]) {
-      const agentId = pathParts[4];
-
-      const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
-      const rateLimitResult = await checkRateLimit(`rank:${ip}`, 100, 60 * 1000);
-
-      if (!rateLimitResult.allowed) {
-        return res.status(429).json({
-          error: 'Too many requests, please try again later'
-        });
-      }
-
-      const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;
-      const type = urlParams.get('type');
-      const difficulty = urlParams.get('difficulty');
-
-      const filters = {};
-      if (type) filters.type = type;
-      if (difficulty) filters.difficulty = difficulty;
-
-      const rankData = await getAgentRank(agentId, filters);
-
-      return res.json(rankData);
+      return getRankHandler(req, res, pathParts[4]);
     }
 
-    return res.status(404).json({ error: 'Not found', path: req.url });
+    return sendResponse(res, responses.notFound());
   } catch (error) {
     console.error('Leaderboard error:', error);
-    return res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to get leaderboard'
-    });
+    return sendResponse(res, responses.internalError('Failed to get leaderboard'));
   }
+}
+
+/**
+ * GET /api/v2/leaderboard
+ * List leaderboard entries
+ */
+async function listHandler(req, res) {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+  const rateLimitResult = await checkRateLimit(`leaderboard:${ip}`, 100, 60 * 1000);
+
+  if (!rateLimitResult.allowed) {
+    return sendResponse(res, responses.tooManyRequests());
+  }
+
+  const params = parseQueryParams(req, { page: 1, limit: 100 });
+  const filters = buildFilters(params, ['type', 'difficulty']);
+
+  const leaderboardData = await getLeaderboard(filters, params.page, params.limit);
+
+  return res.json(leaderboardData);
+}
+
+/**
+ * GET /api/v2/leaderboard/rank/:agentId
+ * Get agent rank
+ */
+async function getRankHandler(req, res, agentId) {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+  const rateLimitResult = await checkRateLimit(`rank:${ip}`, 100, 60 * 1000);
+
+  if (!rateLimitResult.allowed) {
+    return sendResponse(res, responses.tooManyRequests());
+  }
+
+  const params = parseQueryParams(req);
+  const filters = buildFilters(params, ['type', 'difficulty']);
+
+  const rankData = await getAgentRank(agentId, filters);
+
+  return res.json(rankData);
 }

@@ -1,6 +1,6 @@
 /**
  * Challenge API Endpoints
- * 
+ *
  * GET /api/v2/challenges/random - Get random challenge
  * GET /api/v2/challenges/:id - Get challenge details
  * GET /api/v2/challenges - List all challenges
@@ -10,6 +10,14 @@ import {
   getChallengeById,
   getAllChallenges
 } from '../../services/challengeService.js';
+import {
+  setCORSHeaders,
+  handleOptions,
+  parseQueryParams,
+  buildFilters,
+  responses,
+  sendResponse
+} from './middleware.js';
 
 /**
  * Vercel Serverless Function Handler
@@ -34,53 +42,34 @@ export default async function (req, res) {
     return listHandler(req, res);
   }
 
-  return res.status(404).json({ error: 'Not Found', path: pathname || url });
+  return sendResponse(res, responses.notFound());
 }
 
 export async function handler(req, res) {
-  // CORS 헤더
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
+  setCORSHeaders(res, ['GET', 'OPTIONS']);
+  if (handleOptions(req, res)) return;
 
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  // GET만 허용
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return sendResponse(res, {
+      status: 405,
+      body: { error: 'Method not allowed' }
+    });
   }
 
   try {
-    // URL 파라미터 파싱
-    const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;
-    const difficulty = urlParams.get('difficulty');
-    const type = urlParams.get('type');
+    const params = parseQueryParams(req);
+    const filters = buildFilters(params, ['difficulty', 'type']);
 
-    // 필터 생성
-    const filters = {};
-    if (difficulty) filters.difficulty = difficulty;
-    if (type) filters.type = type;
-
-    // 랜덤 챌린지 반환 (Async 호출)
     const challenge = await getRandomChallenge(filters);
 
     if (!challenge) {
-      return res.status(404).json({
-        error: 'Not Found',
-        message: 'No challenge found matching the filters'
-      });
+      return sendResponse(res, responses.notFound('No challenge found matching the filters'));
     }
 
     return res.json(challenge);
   } catch (error) {
     console.error('Get random challenge error:', error);
-    return res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to get random challenge'
-    });
+    return sendResponse(res, responses.internalError('Failed to get random challenge'));
   }
 }
 
@@ -89,19 +78,14 @@ export async function handler(req, res) {
  * Get challenge details by ID
  */
 export async function getByIdHandler(req, res) {
-  // CORS 헤더
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
+  setCORSHeaders(res, ['GET', 'OPTIONS']);
+  if (handleOptions(req, res)) return;
 
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  // GET만 허용
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return sendResponse(res, {
+      status: 405,
+      body: { error: 'Method not allowed' }
+    });
   }
 
   try {
@@ -114,19 +98,13 @@ export async function getByIdHandler(req, res) {
     const challenge = await getChallengeById(challengeId);
 
     if (!challenge) {
-      return res.status(404).json({
-        error: 'Not Found',
-        message: `Challenge ${challengeId} not found`
-      });
+      return sendResponse(res, responses.notFound(`Challenge ${challengeId}`));
     }
 
     return res.json(challenge);
   } catch (error) {
     console.error('Get challenge by ID error:', error);
-    return res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to get challenge details'
-    });
+    return sendResponse(res, responses.internalError('Failed to get challenge details'));
   }
 }
 
@@ -135,43 +113,26 @@ export async function getByIdHandler(req, res) {
  * List all challenges
  */
 export async function listHandler(req, res) {
-  // CORS 헤더
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
+  setCORSHeaders(res, ['GET', 'OPTIONS']);
+  if (handleOptions(req, res)) return;
 
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  // GET만 허용
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return sendResponse(res, {
+      status: 405,
+      body: { error: 'Method not allowed' }
+    });
   }
 
   try {
-    // URL 파라미터 파싱
-    const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;
-    const difficulty = urlParams.get('difficulty');
-    const type = urlParams.get('type');
-    const page = parseInt(urlParams.get('page')) || 1;
-    const limit = parseInt(urlParams.get('limit')) || 20;
-
-    // 필터 생성
-    const filters = {};
-    if (difficulty) filters.difficulty = difficulty;
-    if (type) filters.type = type;
+    const params = parseQueryParams(req, { page: 1, limit: 20 });
+    const filters = buildFilters(params, ['difficulty', 'type']);
 
     // 전체 챌린지 목록 조회 (Async 호출)
-    const result = await getAllChallenges(filters, page, limit);
+    const result = await getAllChallenges(filters, params.page, params.limit);
 
     return res.json(result);
   } catch (error) {
     console.error('List challenges error:', error);
-    return res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to list challenges'
-    });
+    return sendResponse(res, responses.internalError('Failed to list challenges'));
   }
 }
